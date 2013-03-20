@@ -1,0 +1,29 @@
+{
+  "name": "ot-types",
+  "version": "0.6.0",
+  "description": "Operational transform types collection",
+  "main": "lib/index.js",
+  "directories": {
+    "test": "test"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "coffee-script": "~1",
+    "mocha": "~1"
+  },
+  "scripts": {
+    "test": "node_modules/.bin/mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/josephg/ot-types.git"
+  },
+  "keywords": [
+    "OT",
+    "transform"
+  ],
+  "author": "Joseph Gentle <josephg@gmail.com>",
+  "license": "BSD",
+  "readmeFilename": "README.md",
+  "gitHead": "1ca38c758dd0ae57142bf892e318ea5a29e9cf92"
+}
