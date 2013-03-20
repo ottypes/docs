@@ -21,7 +21,6 @@ else
 # Generate a random int 0 <= k < n
 randomInt = exports.randomInt = (n) -> Math.floor randomReal() * n
 
-console.log __dirname
 # Return a random word from a corpus each time the method is called
 randomWord = exports.randomWord = do ->
   words = fs.readFileSync(__dirname + '/jabberwocky.txt').toString().split(/\W+/)
