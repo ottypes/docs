@@ -159,8 +159,8 @@ describe 'text2', ->
       tc op, false, 40, 25
       tc op, false, 41, 26
 
-  it 'passes the randomizer tests', ->
-    @slow 1500
-    randomizer text
+  describe 'randomizer', -> it 'passes', ->
+      @slow 1500
+      randomizer text
 
 

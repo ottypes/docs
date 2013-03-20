@@ -27,6 +27,10 @@ randomWord = exports.randomWord = do ->
   words = fs.readFileSync(__dirname + '/jabberwocky.txt').toString().split(/\W+/)
   -> words[randomInt(words.length)]
 
+# Cross-transform function. Transform server by client and client by server. Returns
+# [server, client].
+transformX = exports.transformX = (type, left, right) ->
+  [type.transform(left, right, 'left'), type.transform(right, left, 'right')]
 
 # Transform a list of server ops by a list of client ops.
 # Returns [serverOps', clientOps'].
@@ -41,11 +45,6 @@ transformLists = (type, serverOps, clientOps) ->
     s
   
   [serverOps, clientOps]
-
-# Cross-transform function. Transform server by client and client by server. Returns
-# [server, client].
-transformX = (type, left, right) ->
-  [type.transform(left, right, 'left'), type.transform(right, left, 'right')]
 
 # Compose a whole list of ops together
 composeList = (type, ops) -> ops.reduce type.compose
