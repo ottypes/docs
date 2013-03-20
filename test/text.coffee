@@ -6,7 +6,7 @@ assert = require 'assert'
 
 randomizer = require './randomizer'
 {randomInt, randomWord} = randomizer
-text = require '../src/text2'
+text = require '../src/text'
 
 readOp = (file) ->
   op = for c in JSON.parse file.shift()
@@ -71,7 +71,7 @@ text.generateRandomDoc = randomWord
 
 
 
-describe 'text2', ->
+describe 'text', ->
   describe 'text-transform-tests.json', ->
     it 'should transform correctly', ->
       testData = fs.readFileSync(__dirname + '/text-transform-tests.json').toString().split('\n')

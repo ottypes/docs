@@ -1,214 +1,279 @@
-# DEPRECATED!
+# This implementation of the text type is the one used by the C ShareDB server.
 #
-# This type works, but is not exported, and will be removed in a future version of this library.
-
-
-# A simple text implementation
+# It is similar to text-composable, however its non-invertable to encourage clients to
+# not depend on invertability so we can move to TP2 more easily. (I'm sneaky like that).
 #
-# Operations are lists of components.
-# Each component either inserts or deletes at a specified position in the document.
+# This type is actually a simplified version of text-tp2 without tombstones. It can be
+# used in a purely client-server interaction (like a web browser) in a TP2 system.
 #
+# Ops are lists of components which iterate over the whole document.
 # Components are either:
-#  {i:'str', p:100}: Insert 'str' at position 100 in the document
-#  {d:'str', p:100}: Delete 'str' at position 100 in the document
+#   A number N: Skip N characters in the original document
+#   "str"     : Insert "str" at the current position in the document
+#   {d:'str'} : Delete 'str', which appears at the current position in the document
 #
-# Components in an operation are executed sequentially, so the position of components
-# assumes previous components have already executed.
+# Eg: [3, 'hi', 5, {d:8}]
 #
-# Eg: This op:
-#   [{i:'abc', p:0}]
-# is equivalent to this op:
-#   [{i:'a', p:0}, {i:'b', p:1}, {i:'c', p:2}]
+# Snapshots are strings.
 
-# NOTE: The global scope here is shared with other sharejs files when built with closure.
-# Be careful what ends up in your namespace.
+text2 = {}
 
-text = {}
+text2.name = 'text2'
 
-text.name = 'text'
+text2.create = -> ''
 
-text.create = -> ''
+# -------- Utility methods
 
-strInject = (s1, pos, s2) -> s1[...pos] + s2 + s1[pos..]
-
-checkValidComponent = (c) ->
-  throw new Error 'component missing position field' if typeof c.p != 'number'
-
-  i_type = typeof c.i
-  d_type = typeof c.d
-  throw new Error 'component needs an i or d field' unless (i_type == 'string') ^ (d_type == 'string')
-
-  throw new Error 'position cannot be negative' unless c.p >= 0
-
-checkValidOp = (op) ->
-  checkValidComponent(c) for c in op
-  true
-
-text.apply = (snapshot, op) ->
-  checkValidOp op
-  for component in op
-    if component.i?
-      snapshot = strInject snapshot, component.p, component.i
-    else
-      deleted = snapshot[component.p...(component.p + component.d.length)]
-      throw new Error "Delete component '#{component.d}' does not match deleted text '#{deleted}'" unless component.d == deleted
-      snapshot = snapshot[...component.p] + snapshot[(component.p + component.d.length)..]
-  
-  snapshot
-
-
-# Exported for use by the random op generator.
-#
-# For simplicity, this version of append does not compress adjacent inserts and deletes of
-# the same text. It would be nice to change that at some stage.
-text._append = append = (newOp, c) ->
-  return if c.i == '' or c.d == ''
-  if newOp.length == 0
-    newOp.push c
-  else
-    last = newOp[newOp.length - 1]
-
-    # Compose the insert into the previous insert if possible
-    if last.i? && c.i? and last.p <= c.p <= (last.p + last.i.length)
-      newOp[newOp.length - 1] = {i:strInject(last.i, c.p - last.p, c.i), p:last.p}
-    else if last.d? && c.d? and c.p <= last.p <= (c.p + c.d.length)
-      newOp[newOp.length - 1] = {d:strInject(c.d, last.p - c.p, last.d), p:c.p}
-    else
-      newOp.push c
-
-text.compose = (op1, op2) ->
-  checkValidOp op1
-  checkValidOp op2
-
-  newOp = op1.slice()
-  append newOp, c for c in op2
-
-  newOp
-
-# Attempt to compress the op components together 'as much as possible'.
-# This implementation preserves order and preserves create/delete pairs.
-text.compress = (op) -> text.compose [], op
-
-text.normalize = (op) ->
-  newOp = []
-  
-  # Normalize should allow ops which are a single (unwrapped) component:
-  # {i:'asdf', p:23}.
-  # There's no good way to test if something is an array:
-  # http://perfectionkills.com/instanceof-considered-harmful-or-how-to-write-a-robust-isarray/
-  # so this is probably the least bad solution.
-  op = [op] if op.i? or op.p?
-
+checkOp = (op) ->
+  throw new Error('Op must be an array of components') unless Array.isArray(op)
+  last = null
   for c in op
-    c.p ?= 0
-    append newOp, c
-  
-  newOp
+    switch typeof c
+      when 'object'
+        throw new Error 'Object components must be deletes of size > 0' unless typeof c.d is 'number' and c.d > 0
+      when 'string'
+        throw new Error 'Inserts cannot be empty' unless c.length > 0
+      when 'number'
+        throw new Error 'Skip components must be >0' unless c > 0
+        throw new Error 'Adjacent skip components should be combined' if typeof last  == 'number'
 
-# This helper method transforms a position by an op component.
-#
-# If c is an insert, insertAfter specifies whether the transform
-# is pushed after the insert (true) or before it (false).
-#
-# insertAfter is optional for deletes.
-transformPosition = (pos, c, insertAfter) ->
-  if c.i?
-    if c.p < pos || (c.p == pos && insertAfter)
-      pos + c.i.length
+    last = c
+
+  throw new Error 'Op has a trailing skip' if typeof last is 'number'
+
+# Makes a function for appending components to a given op.
+# Exported for the randomOpGenerator.
+makeAppend = (op) -> (component) ->
+  if !component || component.d == 0
+    return
+  else if op.length is 0
+    op.push component
+  else if typeof component is typeof op[op.length - 1]
+    if typeof component is 'object'
+      op[op.length - 1].d += component.d
     else
-      pos
+      op[op.length - 1] += component
   else
-    # I think this could also be written as: Math.min(c.p, Math.min(c.p - otherC.p, otherC.d.length))
-    # but I think its harder to read that way, and it compiles using ternary operators anyway
-    # so its no slower written like this.
-    if pos <= c.p
-      pos
-    else if pos <= c.p + c.d.length
-      c.p
-    else
-      pos - c.d.length
+    op.push component
+  
+# Makes 2 functions for taking components from the start of an op, and for peeking
+# at the next op that could be taken.
+makeTake = (op) ->
+  # The index of the next component to take
+  idx = 0
+  # The offset into the component
+  offset = 0
 
-# Helper method to transform a cursor position as a result of an op.
-#
-# Like transformPosition above, if c is an insert, insertAfter specifies whether the cursor position
-# is pushed after an insert (true) or before it (false).
-text.transformCursor = (position, op, side) ->
-  insertAfter = side == 'right'
-  position = transformPosition position, c, insertAfter for c in op
-  position
+  # Take up to length n from the front of op. If n is -1, take the entire next
+  # op component. If indivisableField == 'd', delete components won't be separated.
+  # If indivisableField == 'i', insert components won't be separated.
+  take = (n, indivisableField) ->
+    if idx == op.length
+      return if n == -1 then null else n
 
-# Transform an op component by another op component. Asymmetric.
-# The result will be appended to destination.
-#
-# exported for use in JSON type
-text._tc = transformComponent = (dest, c, otherC, side) ->
-  checkValidOp [c]
-  checkValidOp [otherC]
-
-  if c.i?
-    append dest, {i:c.i, p:transformPosition(c.p, otherC, side == 'right')}
-
-  else # Delete
-    if otherC.i? # delete vs insert
-      s = c.d
-      if c.p < otherC.p
-        append dest, {d:s[...otherC.p - c.p], p:c.p}
-        s = s[(otherC.p - c.p)..]
-      if s != ''
-        append dest, {d:s, p:c.p + otherC.i.length}
-
-    else # Delete vs delete
-      if c.p >= otherC.p + otherC.d.length
-        append dest, {d:c.d, p:c.p - otherC.d.length}
-      else if c.p + c.d.length <= otherC.p
-        append dest, c
+    c = op[idx]
+    if typeof c is 'number'
+      # Skip
+      if n is -1 or c - offset <= n
+        part = c - offset
+        ++idx; offset = 0
+        part
       else
-        # They overlap somewhere.
-        newC = {d:'', p:c.p}
-        if c.p < otherC.p
-          newC.d = c.d[...(otherC.p - c.p)]
-        if c.p + c.d.length > otherC.p + otherC.d.length
-          newC.d += c.d[(otherC.p + otherC.d.length - c.p)..]
-
-        # This is entirely optional - just for a check that the deleted
-        # text in the two ops matches
-        intersectStart = Math.max c.p, otherC.p
-        intersectEnd = Math.min c.p + c.d.length, otherC.p + otherC.d.length
-        cIntersect = c.d[intersectStart - c.p...intersectEnd - c.p]
-        otherIntersect = otherC.d[intersectStart - otherC.p...intersectEnd - otherC.p]
-        throw new Error 'Delete ops delete different text in the same region of the document' unless cIntersect == otherIntersect
-
-        if newC.d != ''
-          # This could be rewritten similarly to insert v delete, above.
-          newC.p = transformPosition newC.p, otherC
-          append dest, newC
+        offset += n
+        n
+    else if typeof c is 'string'
+      # Insert
+      if n is -1 or indivisableField is 'i' or c.length - offset <= n
+        part = c[offset..]
+        ++idx; offset = 0
+        part
+      else
+        part = c[offset...(offset + n)]
+        offset += n
+        part
+    else
+      # Delete
+      if n is -1 or indivisableField is 'd' or c.d - offset <= n
+        part = {d:c.d - offset}
+        ++idx; offset = 0
+        part
+      else
+        offset += n
+        {d:n}
   
-  dest
+  peekType = () ->
+    op[idx]
+  
+  [take, peekType]
 
-invertComponent = (c) ->
-  if c.i?
-    {d:c.i, p:c.p}
+# Find and return the length of an op component
+componentLength = (c) ->
+  if typeof c is 'number' then c else c.length or c.d
+
+# Remove trailing skips
+trim = (op) ->
+  op.pop() if op.length > 0 and typeof op[op.length - 1] is 'number'
+  op
+
+# Normalize an op, removing all empty skips and empty inserts / deletes. Concatenate
+# adjacent inserts and deletes.
+text2.normalize = (op) ->
+  newOp = []
+  append = makeAppend newOp
+  append component for component in op
+
+  trim newOp
+
+# Apply the op to the string. Returns the new string.
+text2.apply = (str, op) ->
+  throw new Error('Snapshot should be a string') unless typeof(str) == 'string'
+  checkOp op
+
+  pos = 0
+  newDoc = []
+
+  for component in op
+    switch typeof component
+      when 'number'
+        throw new Error 'The op is too long for this document' if component > str.length
+        newDoc.push str[...component]
+        str = str[component..]
+      when 'string'
+        newDoc.push component
+      when 'object'
+        str = str[component.d..]
+
+  newDoc.join('') + str
+
+# transform op1 by op2. Return transformed version of op1.
+# op1 and op2 are unchanged by transform.
+text2.transform = (op, otherOp, side) ->
+  throw new Error "side (#{side}) must be 'left' or 'right'" unless side in ['left', 'right']
+
+  checkOp op
+  checkOp otherOp
+  newOp = []
+
+  append = makeAppend newOp
+  [take, peek] = makeTake op
+
+  for component in otherOp
+    switch typeof component
+      when 'number' # Skip
+        length = component
+        while length > 0
+          chunk = take length, 'i'
+          append chunk
+          length -= componentLength chunk unless typeof chunk is 'string'
+      when 'string' # Insert
+        if side == 'left'
+          # The left insert should go first.
+          o = peek()
+          append take -1 if typeof o is 'string'
+
+        # Otherwise, skip the inserted text.
+        append component.length
+      when 'object' # Delete.
+        length = component.d
+        while length > 0
+          chunk = take length, 'i'
+
+          switch typeof chunk
+            when 'number' then length -= chunk
+            when 'string' then append chunk
+              # The delete is unnecessary now.
+            when 'object' then length -= chunk.d
+  
+  # Append extras from op1
+  while (component = take -1)
+    append component
+
+  trim newOp
+
+
+# Compose 2 ops into 1 op.
+text2.compose = (op1, op2) ->
+  checkOp op1
+  checkOp op2
+
+  result = []
+
+  append = makeAppend result
+  [take, _] = makeTake op1
+
+  for component in op2
+    switch typeof component
+      when 'number' # Skip
+        length = component
+        while length > 0
+          chunk = take(length, 'd')
+
+          append chunk
+          length -= componentLength chunk unless typeof chunk is 'object'
+
+      when 'string' # Insert
+        append component
+
+      when 'object' # Delete
+        length = component.d
+
+        while length > 0
+          chunk = take length, 'd'
+
+          switch typeof chunk
+            when 'number'
+              append {d:chunk}
+              length -= chunk
+            when 'string'
+              length -= chunk.length
+            when 'object'
+              append chunk
+    
+  # Append extras from op1
+  while (component = take -1)
+    append component
+
+  trim result
+
+transformPosition = (cursor, op) ->
+  pos = 0
+  for c in op
+    break if cursor <= pos
+  
+    # I could actually use the op_iter stuff above - but I think its simpler like this.
+    switch typeof c
+      when 'number'
+        if cursor <= pos + c
+          return cursor
+        pos += c
+      when 'string'
+        pos += c.length
+        cursor += c.length
+      when 'object'
+        cursor -= Math.min c.d, cursor - pos
+  cursor
+ 
+text2.transformCursor = (cursor, op, isOwnOp) ->
+  pos = 0
+
+  if isOwnOp
+    # Just track the position. We'll teleport the cursor to the end anyway.
+    # This works because text2 ops don't have any trailing skips at the end - so the last
+    # component is the last thing.
+    for c in op
+      switch typeof c
+        when 'number'
+          pos += c
+        when 'string'
+          pos += c.length
+        # Just eat deletes.
+
+    [pos, pos]
   else
-    {i:c.d, p:c.p}
-
-# No need to use append for invert, because the components won't be able to
-# cancel with one another.
-text.invert = (op) -> (invertComponent c for c in op.slice().reverse())
-
-
+    [(transformPosition cursor[0], op), (transformPosition cursor[1], op)]
+  
 if WEB?
-  exports.types ||= {}
-
-  # This is kind of awful - come up with a better way to hook this helper code up.
-  bootstrapTransform(text, transformComponent, checkValidOp, append)
-
-  # [] is used to prevent closure from renaming types.text
-  exports.types.text = text
+  exports.types.text2 = text2
 else
-  module.exports = text
-
-  # The text type really shouldn't need this - it should be possible to define
-  # an efficient transform function by making a sort of transform map and passing each
-  # op component through it.
-  require('./helpers').bootstrapTransform(text, transformComponent, checkValidOp, append)
+  module.exports = text2
 

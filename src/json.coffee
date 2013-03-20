@@ -2,12 +2,12 @@
 #
 # Spec is here: https://github.com/josephg/ShareJS/wiki/JSON-Operations
 #
-# Note: This is obsolete, and will be replaced by the JSON2 type.
+# Note: This is being made obsolete. It will soon be replaced by the JSON2 type.
 
 if WEB?
   text = exports.types.text
 else
-  text = require './text'
+  text = require './text-old'
 
 json = {}
 
