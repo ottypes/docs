@@ -47,4 +47,6 @@ The types are in coffeescript because its good. But, I've had my zealotry ground
 
 # License
 
+All code contributed to this repository is licensed under the zero clause BSD license:
+
 > Redistribution and use in source and binary forms, with or without modification, are permitted.
