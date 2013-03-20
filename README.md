@@ -30,7 +30,9 @@ Transform must conform to Transform Property 1. That is, apply(apply(snapshot, o
 
 ### TP2 Properties
 
-If your OT type supports transform property 2, set the *tp2* property to true and define *prune*.
+If your OT type supports [transform property 2](http://en.wikipedia.org/wiki/Operational_transformation#Convergence_properties), set the *tp2* property to true and define a *prune* function.
+
+Transform property 2 is an additional requirement on your *transform* function. Specifically, transform(op3, compose(op1, transform(op2, op1)) == transform(op3, compose(op2, transform(op1, op2)).
 
 - **tp2**: *(optional)* Boolean property. Make this truthy to declare that the type has tp2 support. Types with TP2 support must define *prune*.
 - **prune(op, otherOp)**: The inverse of transform. Formally, apply(snapshot, op1) == apply(snapshot, prune(transform(op1, op2), op2)). Usually, prune will simply be the inverse of transform and prune(transform(op1, op2), op2) == op1.
