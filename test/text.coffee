@@ -1,7 +1,6 @@
 # Tests for the ShareDB compatible text type.
 
 fs = require 'fs'
-util = require 'util'
 assert = require 'assert'
 
 randomizer = require './randomizer'
@@ -160,7 +159,7 @@ describe 'text', ->
       tc op, false, 41, 26
 
   describe 'randomizer', -> it 'passes', ->
-      @slow 1500
-      randomizer text
+    @slow 1500
+    randomizer text
 
 
