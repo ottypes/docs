@@ -7,7 +7,7 @@ register = (file) ->
 # Import all the built-in types.
 register './simple'
 
-register './text2'
+register './text'
 register './text-tp2'
 
 register './json'

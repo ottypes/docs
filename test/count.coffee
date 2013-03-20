@@ -25,5 +25,7 @@ count.generateRandomOp = (doc) ->
 
 
 describe 'type count', ->
-  it 'should pass the randomizer tests', -> randomizer count
+  it 'should pass the randomizer tests', ->
+    @slow 200
+    randomizer count
 

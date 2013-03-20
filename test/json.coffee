@@ -3,7 +3,7 @@
 # Spec: https://github.com/josephg/ShareJS/wiki/JSON-Operations
 
 assert = require 'assert'
-nativetype = require '../src/json'
+{json:nativetype} = require '../src'
 
 randomizer = require './randomizer'
 {randomInt, randomReal, randomWord, transformX} = randomizer

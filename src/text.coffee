@@ -18,7 +18,7 @@
 
 text2 = {}
 
-text2.name = 'text2'
+text2.name = 'text'
 
 text2.create = -> ''
 

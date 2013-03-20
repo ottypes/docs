@@ -12,6 +12,7 @@
     "mocha": "~1"
   },
   "scripts": {
+    "prepublish": "make all",
     "test": "node_modules/.bin/mocha"
   },
   "repository": {

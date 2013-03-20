@@ -5,7 +5,7 @@ assert = require 'assert'
 
 randomizer = require './randomizer'
 {randomInt, randomWord} = randomizer
-text = require '../src/text'
+{text} = require '../src'
 
 readOp = (file) ->
   op = for c in JSON.parse file.shift()
