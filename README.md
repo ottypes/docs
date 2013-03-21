@@ -6,6 +6,8 @@ These types have been finely aged in [ShareJS](https://github.com/josephg/sharej
 
 Please port any types you find useful to your favorite languages so we can do operational transform in more places!
 
+[![Build Status](https://secure.travis-ci.org/josephg/ot-types.png)](http://travis-ci.org/josephg/ot-types)
+
 ## Spec
 
 Each OT type exposes a single object with the following properties. Note that only *name*, *create*, *apply* and *transform* are strictly required, though most types should also include *url* and *compose*.
