@@ -44,7 +44,7 @@ Transform property 2 is an additional requirement on your *transform* function. 
 
 # Coffeescript, eh?
 
-The types are in coffeescript because its good. But, I've had my zealotry ground away over time. I have no problem with types in this repository existing in any language so long as it can compile to javascript.
+The types are in coffeescript because its good. But, I've had my zealotry ground away over time. I have no problem with types in this repository existing in any language so long as running `make` compiles them to javascript.
 
 
 # License
