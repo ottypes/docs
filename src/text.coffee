@@ -16,11 +16,9 @@
 #
 # Snapshots are strings.
 
-text2 = {}
+exports.name = 'text'
 
-text2.name = 'text'
-
-text2.create = -> ''
+exports.create = -> ''
 
 # -------- Utility methods
 
@@ -117,7 +115,7 @@ trim = (op) ->
 
 # Normalize an op, removing all empty skips and empty inserts / deletes. Concatenate
 # adjacent inserts and deletes.
-text2.normalize = (op) ->
+exports.normalize = (op) ->
   newOp = []
   append = makeAppend newOp
   append component for component in op
@@ -125,7 +123,7 @@ text2.normalize = (op) ->
   trim newOp
 
 # Apply the op to the string. Returns the new string.
-text2.apply = (str, op) ->
+exports.apply = (str, op) ->
   throw new Error('Snapshot should be a string') unless typeof(str) == 'string'
   checkOp op
 
@@ -147,7 +145,7 @@ text2.apply = (str, op) ->
 
 # transform op1 by op2. Return transformed version of op1.
 # op1 and op2 are unchanged by transform.
-text2.transform = (op, otherOp, side) ->
+exports.transform = (op, otherOp, side) ->
   throw new Error "side (#{side}) must be 'left' or 'right'" unless side in ['left', 'right']
 
   checkOp op
@@ -192,7 +190,7 @@ text2.transform = (op, otherOp, side) ->
 
 
 # Compose 2 ops into 1 op.
-text2.compose = (op1, op2) ->
+exports.compose = (op1, op2) ->
   checkOp op1
   checkOp op2
 
@@ -253,12 +251,12 @@ transformPosition = (cursor, op) ->
         cursor -= Math.min c.d, cursor - pos
   cursor
  
-text2.transformCursor = (cursor, op, isOwnOp) ->
+exports.transformCursor = (cursor, op, isOwnOp) ->
   pos = 0
 
   if isOwnOp
     # Just track the position. We'll teleport the cursor to the end anyway.
-    # This works because text2 ops don't have any trailing skips at the end - so the last
+    # This works because text ops don't have any trailing skips at the end - so the last
     # component is the last thing.
     for c in op
       switch typeof c
@@ -272,8 +270,4 @@ text2.transformCursor = (cursor, op, isOwnOp) ->
   else
     [(transformPosition cursor[0], op), (transformPosition cursor[1], op)]
   
-if WEB?
-  exports.types.text2 = text2
-else
-  module.exports = text2
 

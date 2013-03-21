@@ -21,7 +21,7 @@
 # Eg, the document: 'Hello .....world' ('.' denotes tombstoned (deleted) characters)
 # would be represented by a document snapshot of ['Hello ', 5, 'world']
 
-type =
+module.exports = type =
   name: 'text-tp2'
   tp2: true
   create: -> {charLength:0, totalLength:0, positionCache:[], data:[]}
@@ -315,8 +315,4 @@ type.compose = (op1, op2) ->
 
   result
 
-if WEB?
-  exports.types['text-tp2'] = type
-else
-  module.exports = type
 
