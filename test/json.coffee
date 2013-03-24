@@ -64,7 +64,7 @@ genTests = (type) ->
   type.generateRandomOp = (data) ->
     pct = 0.95
 
-    container = data: clone(data)
+    container = data: clone data
 
     op = while randomReal() < pct
       pct *= 0.6

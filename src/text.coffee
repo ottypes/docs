@@ -18,7 +18,11 @@
 
 exports.name = 'text'
 
-exports.create = -> ''
+exports.url = 'http://sharejs.org/types/textv1'
+
+exports.create = (initial) ->
+  throw new Error 'Initial data must be a string' if initial? and typeof initial isnt 'string'
+  initial or ''
 
 # -------- Utility methods
 

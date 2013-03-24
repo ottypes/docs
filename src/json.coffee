@@ -5,13 +5,14 @@
 # Note: This is being made obsolete. It will soon be replaced by the JSON2 type.
 
 if WEB?
-  text = exports.types.text
+  text = window.ottypes.text
 else
   text = require './text-old'
 
 json = {}
 
 json.name = 'json'
+json.url = 'http://sharejs.org/types/JSONv0'
 
 json.create = -> null
 
@@ -44,7 +45,7 @@ json.apply = (snapshot, op) ->
   json.checkValidOp op
   op = clone op
 
-  container = {data: clone snapshot}
+  container = {data: snapshot}
 
   try
     for c, i in op

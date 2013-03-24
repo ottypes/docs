@@ -4,7 +4,7 @@ fs = require 'fs'
 
 # You can use this to enable debugging info in this file.
 p = -> #util.debug
-i = -> #util.inspect
+i = -> # (o) -> util.inspect o, colors:true, depth:3
 
 # By default, use a new seed every 6 hours. This balances making test runs stable while debugging
 # with avoiding obscure bugs caused by a rare seed.
@@ -48,6 +48,12 @@ transformLists = (type, serverOps, clientOps) ->
 # Compose a whole list of ops together
 composeList = (type, ops) -> ops.reduce type.compose
 
+# Hax. Apparently this is still the fastest way to deep clone an object,
+# assuming we have support for JSON.
+#
+# This is needed because calling apply() now destroys the original object.
+clone = (o) -> JSON.parse(JSON.stringify o)
+
 # Returns client result
 testRandomOp = (type, initialDoc = type.create()) ->
   makeDoc = -> {
@@ -72,7 +78,7 @@ testRandomOp = (type, initialDoc = type.create()) ->
 
   # First, test type.apply.
   testApply = (doc) ->
-    s = initialDoc
+    s = clone initialDoc
     s = type.apply s, op for op in doc.ops
 
     checkSnapshotsEq s, doc.result
@@ -82,7 +88,7 @@ testRandomOp = (type, initialDoc = type.create()) ->
   if type.invert?
     # Invert all the ops and apply them to result. Should end up with initialDoc.
     testInvert = (doc, ops = doc.ops) ->
-      snapshot = JSON.parse(JSON.stringify(doc.result))
+      snapshot = clone doc.result
 
       # Sadly, coffeescript doesn't seem to support iterating backwards through an array.
       # reverse() reverses an array in-place so it needs to be cloned first.
@@ -102,7 +108,7 @@ testRandomOp = (type, initialDoc = type.create()) ->
       if doc.ops.length > 0
         doc.composed = composeList type, doc.ops
         # .... And this should match the expected document.
-        checkSnapshotsEq doc.result, type.apply initialDoc, doc.composed
+        checkSnapshotsEq doc.result, type.apply clone(initialDoc), doc.composed
 
     compose set for set in opSets
 
@@ -112,8 +118,8 @@ testRandomOp = (type, initialDoc = type.create()) ->
     if client.composed? && server.composed?
       [server_, client_] = transformX type, server.composed, client.composed
 
-      s_c = type.apply server.result, client_
-      c_s = type.apply client.result, server_
+      s_c = type.apply clone(server.result), client_
+      c_s = type.apply clone(client.result), server_
 
       # Interestingly, these will not be the same as s_c and c_s above.
       # Eg, when:
@@ -147,15 +153,15 @@ testRandomOp = (type, initialDoc = type.create()) ->
     [s_, c_] = transformLists type, server.ops, client.ops
     p "XF result #{i s_} x #{i c_}"
 #    p "applying #{i c_} to #{i server.result}"
-    s_c = c_.reduce type.apply, server.result
-    c_s = s_.reduce type.apply, client.result
+    s_c = c_.reduce type.apply, clone server.result
+    c_s = s_.reduce type.apply, clone client.result
 
     checkSnapshotsEq s_c, c_s
 
     # ... And we'll do a round-trip using invert().
     if type.invert?
       c_inv = c_.slice().reverse().map type.invert
-      server_result_ = c_inv.reduce type.apply, s_c
+      server_result_ = c_inv.reduce type.apply, clone(s_c)
       checkSnapshotsEq server.result, server_result_
       orig_ = server.ops.slice().reverse().map(type.invert).reduce(type.apply, server_result_)
       checkSnapshotsEq orig_, initialDoc
