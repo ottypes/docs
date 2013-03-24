@@ -98,6 +98,15 @@ describe 'text', ->
         # without crashing.
         result = text.compose(op1, op2)
 
+  describe '#create()', ->
+    it 'should return an empty string when called with no arguments', ->
+      assert.strictEqual '', text.create()
+    it 'should return any string thats passed in', ->
+      assert.strictEqual '', text.create ''
+      assert.strictEqual 'oh hi', text.create 'oh hi'
+    it 'throws when something other than a string is passed in', ->
+      assert.throws (-> text.create 123), /must be a string/
+
   it 'should normalize sanely', ->
     assert.deepEqual [], text.normalize [0]
     assert.deepEqual [], text.normalize ['']

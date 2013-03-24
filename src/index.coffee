@@ -1,8 +1,7 @@
-
 register = (file) ->
   type = require file
   exports[type.name] = type
-  try require "#{file}-api"
+  exports[type.url] = type if type.url
 
 # Import all the built-in types.
 register './simple'
