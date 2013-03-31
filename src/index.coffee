@@ -9,5 +9,5 @@ register './simple'
 register './text'
 register './text-tp2'
 
-register './json'
+register './json0'
 
