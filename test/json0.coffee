@@ -3,7 +3,7 @@
 # Spec: https://github.com/josephg/ShareJS/wiki/JSON-Operations
 
 assert = require 'assert'
-{json:nativetype} = require '../src'
+{json0:nativetype} = require '../src'
 
 randomizer = require './randomizer'
 {randomInt, randomReal, randomWord, transformX} = randomizer
@@ -177,9 +177,6 @@ genTests = (type) ->
   # These tests should pick up *most* problems with a normal JSON OT implementation.
 
   describe 'sanity', ->
-    it 'name is json', ->
-      assert.strictEqual type.name, 'json'
-
     describe '#create()', -> it 'returns null', ->
       assert.deepEqual type.create(), null
 

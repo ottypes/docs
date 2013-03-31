@@ -11,7 +11,7 @@ else
 
 json = {}
 
-json.name = 'json'
+json.name = 'json0'
 json.url = 'http://sharejs.org/types/JSONv0'
 
 json.create = -> null
