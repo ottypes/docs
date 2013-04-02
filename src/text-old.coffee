@@ -210,5 +210,5 @@ else
   # The text type really shouldn't need this - it should be possible to define
   # an efficient transform function by making a sort of transform map and passing each
   # op component through it.
-  require('./helpers').bootstrapTransform(text, transformComponent, checkValidOp, append)
+  require('./helpers')._bootstrapTransform(text, transformComponent, checkValidOp, append)
 
