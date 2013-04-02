@@ -4,7 +4,7 @@
 #
 # Note: This is being made obsolete. It will soon be replaced by the JSON2 type.
 
-if WEB?
+if window?
   text = window.ottypes.text
 else
   text = require './text-old'
@@ -12,7 +12,7 @@ else
 json = {}
 
 json.name = 'json0'
-json.url = 'http://sharejs.org/types/JSONv0'
+json.uri = 'http://sharejs.org/types/JSONv0'
 
 json.create = -> null
 
@@ -432,16 +432,11 @@ json.transformComponent = (dest, c, otherC, type) ->
   json.append dest, c
   return dest
 
-if WEB?
-  exports.types ||= {}
-
+if window?
   # This is kind of awful - come up with a better way to hook this helper code up.
-  exports._bt(json, json.transformComponent, json.checkValidOp, json.append)
-
-  # [] is used to prevent closure from renaming types.text
-  exports.types.json = json
+  exports._bootstrapTransform(json, json.transformComponent, json.checkValidOp, json.append)
 else
-  module.exports = json
+  require('./helpers')._bootstrapTransform(json, json.transformComponent, json.checkValidOp, json.append)
 
-  require('./helpers').bootstrapTransform(json, json.transformComponent, json.checkValidOp, json.append)
+module.exports = json
 

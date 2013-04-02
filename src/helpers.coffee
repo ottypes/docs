@@ -6,7 +6,7 @@
 
 # Add transform and transformX functions for an OT type which has transformComponent defined.
 # transformComponent(destination array, component, other component, side)
-exports._bt = bootstrapTransform = (type, transformComponent, checkValidOp, append) ->
+exports._bootstrapTransform = (type, transformComponent, checkValidOp, append) ->
   transformComponentX = (left, right, destLeft, destRight) ->
     transformComponent destLeft, left, right, 'left'
     transformComponent destRight, right, left, 'right'
@@ -61,5 +61,3 @@ exports._bt = bootstrapTransform = (type, transformComponent, checkValidOp, appe
     else
       transformX(otherOp, op)[1]
 
-if typeof WEB is 'undefined'
-  exports.bootstrapTransform = bootstrapTransform

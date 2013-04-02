@@ -4,6 +4,6 @@
   var _t = module.exports;
   _types[_t.name] = _t;
 
-  if (exports.uri) _types[exports.uri] = _t;
+  if (_t.uri) _types[_t.uri] = _t;
 })();
 
