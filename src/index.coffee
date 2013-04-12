@@ -1,7 +1,7 @@
 register = (file) ->
   type = require file
   exports[type.name] = type
-  exports[type.url] = type if type.url
+  exports[type.uri] = type if type.uri
 
 # Import all the built-in types.
 register './simple'

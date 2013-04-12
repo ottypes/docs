@@ -23,11 +23,10 @@
 # NOTE: The global scope here is shared with other sharejs files when built with closure.
 # Be careful what ends up in your namespace.
 
-text = {}
-
-text.name = 'text'
-
-text.create = -> ''
+text =
+  name: 'text-old'
+  uri: 'http://sharejs.org/types/textv0'
+  create: -> ''
 
 strInject = (s1, pos, s2) -> s1[...pos] + s2 + s1[pos..]
 
@@ -196,19 +195,11 @@ invertComponent = (c) ->
 text.invert = (op) -> (invertComponent c for c in op.slice().reverse())
 
 
-if WEB?
-  exports.types ||= {}
-
+if window?
   # This is kind of awful - come up with a better way to hook this helper code up.
-  bootstrapTransform(text, transformComponent, checkValidOp, append)
-
-  # [] is used to prevent closure from renaming types.text
-  exports.types.text = text
+  exports._bootstrapTransform(text, text.transformComponent, text.checkValidOp, text.append)
 else
-  module.exports = text
+  require('./helpers')._bootstrapTransform(text, text.transformComponent, text.checkValidOp, text.append)
 
-  # The text type really shouldn't need this - it should be possible to define
-  # an efficient transform function by making a sort of transform map and passing each
-  # op component through it.
-  require('./helpers')._bootstrapTransform(text, transformComponent, checkValidOp, append)
+module.exports = text
 

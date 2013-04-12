@@ -5,14 +5,13 @@
 # Note: This is being made obsolete. It will soon be replaced by the JSON2 type.
 
 if window?
-  text = window.ottypes.text
+  text = module.exports # This is kind of dodgy, but it works because json0 is included right after text-old.
 else
   text = require './text-old'
 
-json = {}
-
-json.name = 'json0'
-json.uri = 'http://sharejs.org/types/JSONv0'
+json =
+  name: 'json0'
+  uri: 'http://sharejs.org/types/JSONv0'
 
 json.create = -> null
 
