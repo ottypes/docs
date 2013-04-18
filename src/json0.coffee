@@ -122,7 +122,7 @@ json.apply = (snapshot, op) ->
 
   container.data
 
-json.incrementalUpdate = (snapshot, op, _yield) ->
+json.incrementalApply = (snapshot, op, _yield) ->
   for c in op
     smallOp = [c]
     snapshot = json.apply snapshot, smallOp
