@@ -31,9 +31,12 @@ json.invertComponent = (c) ->
 
 json.invert = (op) -> json.invertComponent c for c in op.slice().reverse()
 
-json.checkValidOp = (op) ->
-
 isArray = (o) -> Object.prototype.toString.call(o) == '[object Array]'
+
+json.checkValidOp = (op) ->
+  for c in op
+    throw new Error 'Missing path' unless isArray c.p
+
 json.checkList = (elem) ->
   throw new Error 'Referenced element not a list' unless isArray(elem)
 
@@ -118,6 +121,13 @@ json.apply = (snapshot, op) ->
       throw new Error 'invalid / missing instruction in op'
 
   container.data
+
+json.incrementalUpdate = (snapshot, op, _yield) ->
+  for c in op
+    smallOp = [c]
+    snapshot = json.apply snapshot, smallOp
+    _yield smallOp, snapshot
+  snapshot
 
 # Checks if two paths, p1 and p2 match.
 json.pathMatches = (p1, p2, ignoreLast) ->

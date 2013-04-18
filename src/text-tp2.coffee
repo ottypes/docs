@@ -114,6 +114,8 @@ type.apply = (doc, op) ->
 
   checkOp op
 
+  # This is pretty inefficient. It would be nice to rewrite this to not create
+  # a whole new document object.
   newDoc = type.create()
   position = {index:0, offset:0}
 
