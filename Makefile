@@ -16,6 +16,7 @@ test:
 lib:
 	rm -rf lib
 	coffee -cbo lib src
+	cp src/json0.js lib
 
 webclient/%.uncompressed.js: src/%.coffee before.js after.js
 	mkdir -p webclient
@@ -23,12 +24,12 @@ webclient/%.uncompressed.js: src/%.coffee before.js after.js
 	$(COFFEE) -bpc $< >> $@
 	cat after.js >> $@
 
-webclient/json0.uncompressed.js: src/json0.coffee src/text-old.coffee src/helpers.coffee before.js after.js
+webclient/json0.uncompressed.js: src/json0.js src/text-old.coffee src/helpers.coffee before.js after.js
 	mkdir -p webclient
 	cat before.js > $@
 	$(COFFEE) -bpc src/helpers.coffee >> $@
 	$(COFFEE) -bpc src/text-old.coffee >> $@
-	$(COFFEE) -bpc $< >> $@
+	cat $< >> $@
 	cat after.js >> $@
 
 # Uglify.
