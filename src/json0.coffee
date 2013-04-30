@@ -13,7 +13,8 @@ json =
   name: 'json0'
   uri: 'http://sharejs.org/types/JSONv0'
 
-json.create = -> null
+# null instead of undefined if you don't pass an argument.
+json.create = (init) -> if init? then init else null
 
 json.invertComponent = (c) ->
   c_ = {p: c.p}
