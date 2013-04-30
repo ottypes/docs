@@ -195,7 +195,7 @@ invertComponent = (c) ->
 text.invert = (op) -> (invertComponent c for c in op.slice().reverse())
 
 
-if window?
+if typeof require is 'undefined'
   # This is kind of awful - come up with a better way to hook this helper code up.
   exports._bootstrapTransform(text, text.transformComponent, text.checkValidOp, text.append)
 else

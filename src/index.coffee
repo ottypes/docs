@@ -1,13 +1,13 @@
-register = (file) ->
-  type = require file
+
+register = (type) ->
   exports[type.name] = type
   exports[type.uri] = type if type.uri
 
-# Import all the built-in types.
-register './simple'
+# Import all the built-in types. Requiring directly for browserify.
+register require './simple'
 
-register './text'
-register './text-tp2'
+register require './text'
+register require './text-tp2'
 
-register './json0'
+register require './json0'
 
