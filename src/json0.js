@@ -265,22 +265,22 @@ json.append = function(dest,c) {
   var last;
 
   if (dest.length != 0 && json.pathMatches(c.p,(last = dest[dest.length - 1]).p)) {
-    if (last.na !== void 0 && c.na !== void 0) {
+    if (last.na !== undefined && c.na !== undefined) {
       dest[dest.length - 1] = {
         p: last.p,
         na: last.na + c.na
       };
-    } else if (last.li !== void 0 && c.li === undefined && c.ld === last.li) {
+    } else if (last.li !== undefined && c.li === undefined && c.ld === last.li) {
       // insert immediately followed by delete becomes a noop.
-      if (last.ld !== void 0) {
+      if (last.ld !== undefined) {
         // leave the delete part of the replace
         delete last.li;
       } else {
         dest.pop();
       }
-    } else if (last.od !== void 0 && last.oi === undefined && c.oi !== void 0 && c.od === undefined) {
+    } else if (last.od !== undefined && last.oi === undefined && c.oi !== undefined && c.od === undefined) {
       last.oi = c.oi;
-    } else if (c.lm !== void 0 && c.p[c.p.length - 1] === c.lm) {
+    } else if (c.lm !== undefined && c.p[c.p.length - 1] === c.lm) {
       // don't do anything
     } else {
       dest.push(c);
