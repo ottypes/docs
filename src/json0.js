@@ -57,9 +57,7 @@ json.create = function(data) {
 };
 
 json.invertComponent = function(c) {
-  var c_ = {
-    p: c.p
-  };
+  var c_ = {p: c.p};
 
   if (c.si !== void 0) c_.sd = c.si;
   if (c.sd !== void 0) c_.si = c.sd;
@@ -246,17 +244,26 @@ json.incrementalApply = function(snapshot, op, _yield) {
 };
 
 // Checks if two paths, p1 and p2 match.
-json.pathMatches = function(p1,p2,ignoreLast) {
+json.pathMatches = function(p1, p2, ignoreLast) {
   if (p1.length != p2.length)
     return false;
 
   for (var i = 0; i < p1.length; i++) {
-    var p = p1[i];
-    if (p !== p2[i] && (!ignoreLast || i !== p1.length - 1))
+    if (p1[i] !== p2[i] && (!ignoreLast || i !== p1.length - 1))
       return false;
   }
 
   return true;
+};
+
+var _convertToTextComponent = function(component) {
+  var newC = {p: component.p[component.p.length - 1]};
+  if (component.si != null) {
+    newC.i = component.si;
+  } else {
+    newC.d = component.sd;
+  }
+  return newC;
 };
 
 json.append = function(dest,c) {
@@ -264,12 +271,9 @@ json.append = function(dest,c) {
 
   var last;
 
-  if (dest.length != 0 && json.pathMatches(c.p,(last = dest[dest.length - 1]).p)) {
-    if (last.na !== undefined && c.na !== undefined) {
-      dest[dest.length - 1] = {
-        p: last.p,
-        na: last.na + c.na
-      };
+  if (dest.length != 0 && json.pathMatches(c.p, (last = dest[dest.length - 1]).p)) {
+    if (last.na != null && c.na != null) {
+      dest[dest.length - 1] = {p: last.p, na: last.na + c.na};
     } else if (last.li !== undefined && c.li === undefined && c.ld === last.li) {
       // insert immediately followed by delete becomes a noop.
       if (last.ld !== undefined) {
@@ -282,6 +286,26 @@ json.append = function(dest,c) {
       last.oi = c.oi;
     } else if (c.lm !== undefined && c.p[c.p.length - 1] === c.lm) {
       // don't do anything
+    } else {
+      dest.push(c);
+    }
+  } else if (dest.length != 0 && json.pathMatches(c.p, last.p, true)) {
+    if ((c.si != null || c.sd != null) && (last.si != null || last.sd != null)) {
+      // Try to compose the string ops together using text's equivalent methods
+      var textOp = [_convertToTextComponent(last)];
+      text._append(textOp, _convertToTextComponent(c));
+      
+      // Then convert back.
+      if (textOp.length !== 1) {
+        dest.push(c);
+      } else {
+        var textC = textOp[0];
+        last.p[last.p.length - 1] = textC.p;
+        if (textC.i != null)
+          last.si = textC.i;
+        else
+          last.sd = textC.d;
+      }
     } else {
       dest.push(c);
     }
@@ -412,35 +436,24 @@ json.transformComponent = function(dest, c, otherC, type) {
           throw new Error('must be a string?');
 
         // Convert an op component to a text op component
-        var convert = function(component) {
-          var newC = {
-            p: component.p[component.p.length-1]
-          };
-          if (component.si != null) {
-            newC.i = component.si;
-          } else {
-            newC.d = component.sd;
-          }
-          return newC;
-        };
 
-        var tc1 = convert(c);
-        var tc2 = convert(otherC);
+        var tc1 = _convertToTextComponent(c);
+        var tc2 = _convertToTextComponent(otherC);
 
         var res = [];
 
-        text._tc(res,tc1,tc2,type);
+        text._tc(res, tc1, tc2, type);
         for (var i = 0; i < res.length; i++) {
           var tc = res[i];
           var jc = {
-            p: c.p.slice(0,common)
+            p: c.p.slice(0, common)
           };
           jc.p.push(tc.p);
           if (tc.i != null)
             jc.si = tc.i;
           if (tc.d != null)
             jc.sd = tc.d;
-          json.append(dest,jc);
+          json.append(dest, jc);
         }
         return dest;
       }

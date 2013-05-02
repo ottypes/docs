@@ -303,6 +303,9 @@ genTests = (type) ->
         a = [{p:[0],ld:'abc',li:null}]
         assert.deepEqual [{p:[0],ld:'abc'}], type.compose a, [{p:[0],ld:null}]
         assert.deepEqual [{p:[0],ld:'abc',li:null}], a
+
+      it 'composes together adjacent string ops', ->
+        assert.deepEqual [{p:[100], si:'hi'}], type.compose [{p:[100], si:'h'}], [{p:[101], si:'i'}]
     
     it 'moves ops on a moved element with the element', ->
       assert.deepEqual [{p:[10], ld:'x'}], type.transform [{p:[4], ld:'x'}], [{p:[4], lm:10}], 'left'
