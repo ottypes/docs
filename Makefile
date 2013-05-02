@@ -34,7 +34,7 @@ webclient/json0.uncompressed.js: src/json0.js src/text-old.coffee src/helpers.co
 
 # Uglify.
 webclient/%.js: webclient/%.uncompressed.js
-	$(UGLIFY) $< -cmo $@
+	$(UGLIFY) $< -c unsafe=true -mo $@
 
 # Compile the types for a browser.
 webclient: webclient/json0.js webclient/text.js webclient/text-tp2.js
