@@ -24,10 +24,10 @@ webclient/%.uncompressed.js: src/%.coffee before.js after.js
 	$(COFFEE) -bpc $< >> $@
 	cat after.js >> $@
 
-webclient/json0.uncompressed.js: src/json0.js src/text-old.coffee src/helpers.coffee before.js after.js
+webclient/json0.uncompressed.js: src/json0.js src/text-old.coffee src/helpers.js before.js after.js
 	mkdir -p webclient
 	cat before.js > $@
-	$(COFFEE) -bpc src/helpers.coffee >> $@
+	cat src/helpers.js >> $@
 	$(COFFEE) -bpc src/text-old.coffee >> $@
 	cat $< >> $@
 	cat after.js >> $@
