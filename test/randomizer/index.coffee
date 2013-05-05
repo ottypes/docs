@@ -56,10 +56,7 @@ clone = (o) -> JSON.parse(JSON.stringify o)
 
 # Returns client result
 testRandomOp = (type, initialDoc = type.create()) ->
-  makeDoc = -> {
-      ops: []
-      result: initialDoc
-    }
+  makeDoc = -> ops:[], result:initialDoc
   opSets = (makeDoc() for [0...3])
   [client, client2, server] = opSets
 
@@ -127,13 +124,31 @@ testRandomOp = (type, initialDoc = type.create()) ->
       #  client.ops = [ 1, { i: 'b' } ]
       checkSnapshotsEq s_c, c_s
 
+      if type.tp2
+        # This is an interesting property which I don't think is strictly
+        # enforced by the TP2 property, but which my text-tp2 type holds. I'm
+        # curious if this will hold for any TP2 type.
+        #
+        # Given X, [A,B] based on a document, I'm testing if:
+        #  T(T(x, A), B) == T(x, A.B).
+        #
+        # Because this holds, it is possible to collapse intermediate ops
+        # without effecting the OT code.
+        x1 = server.composed
+        x1 = type.transform x1, c, 'left' for c in client.ops
+
+        x2 = server.composed
+        x2 = type.transform x2, client.composed, 'left'
+
+        assert.deepEqual x1, x2
+
       if type.tp2 and client2.composed?
         # TP2 requires that T(op3, op1 . T(op2, op1)) == T(op3, op2 . T(op1, op2)).
-        lhs = type.transform client2.composed, (type.compose client.composed, server_), 'left'
-        rhs = type.transform client2.composed, (type.compose server.composed, client_), 'left'
+        lhs = type.transform client2.composed, type.compose(client.composed, server_), 'left'
+        rhs = type.transform client2.composed, type.compose(server.composed, client_), 'left'
 
         assert.deepEqual lhs, rhs
-  
+
   if type.prune?
     p 'PRUNE'
     
@@ -148,7 +163,6 @@ testRandomOp = (type, initialDoc = type.create()) ->
 
   # Now we'll check the n^2 transform method.
   if client.ops.length > 0 && server.ops.length > 0
-    p 'TP2'
     p "s #{i server.result} c #{i client.result} XF #{i server.ops} x #{i client.ops}"
     [s_, c_] = transformLists type, server.ops, client.ops
     p "XF result #{i s_} x #{i c_}"
@@ -188,7 +202,7 @@ collectStats = (type) ->
   [stats, restore]
 
 # Run some iterations of the random op tester. Requires a random op generator for the type.
-module.exports = (type, iterations = 1000) ->
+module.exports = (type, iterations = 2000) ->
   assert.ok type.generateRandomOp
   assert.ok type.transform
 
