@@ -14,7 +14,7 @@ webclient/%.uncompressed.js: before.js lib/%.js after.js
 	mkdir -p webclient
 	cat $^ > $@
 
-webclient/json0.uncompressed.js: before.js lib/json0.js lib/text-old.js lib/helpers.js after.js
+webclient/json0.uncompressed.js: before.js lib/helpers.js lib/text-old.js lib/json0.js after.js
 	mkdir -p webclient
 	cat $^ > $@
 
