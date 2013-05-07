@@ -6,7 +6,7 @@ assert = require 'assert'
 randomizer = require './randomizer'
 {randomInt, randomReal, randomWord} = randomizer
 
-text = require '../src/text-tp2'
+text = require '../lib/text-tp2'
 
 describe 'text-tp2', ->
   it 'transforms sanely', ->

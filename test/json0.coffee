@@ -1,9 +1,9 @@
-# Tests for JSON OT type. (src/types/json.coffee)
+# Tests for JSON OT type. (lib/types/json.coffee)
 #
 # Spec: https://github.com/josephg/ShareJS/wiki/JSON-Operations
 
 assert = require 'assert'
-{json0:nativetype} = require '../src'
+{json0:nativetype} = require '../lib'
 
 randomizer = require './randomizer'
 {randomInt, randomReal, randomWord, transformX} = randomizer
