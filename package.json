@@ -8,7 +8,6 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "coffee-script": "~1",
     "mocha": "~1",
     "uglify-js": "*"
   },
