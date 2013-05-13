@@ -20,7 +20,7 @@ webclient/json0.uncompressed.js: before.js lib/helpers.js lib/text-old.js lib/js
 
 # Uglify.
 webclient/%.js: webclient/%.uncompressed.js
-	$(UGLIFY) $< -c unsafe=true -mo $@
+	$(UGLIFY) $< --lint -c unsafe=true -mo $@
 
 # Compile the types for a browser.
 webclient: webclient/json0.js webclient/text.js webclient/text-tp2.js
