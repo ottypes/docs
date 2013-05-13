@@ -2,9 +2,9 @@
 
 We have a lovely buffet of operational transform types. Each type has many fine features, including thorough testing, browser support and documentation.
 
-These types have been finely aged in [ShareJS](https://github.com/josephg/sharejs)'s type labs. We hope they will meet your needs.
+These types have been finely aged in [ShareJS](https://github.com/josephg/sharejs)'s type labs. We are quite proud of them.
 
-Please port any types you find useful to your favorite languages so we can do operational transform in more places!
+Please port any types you find useful to your favorite languages so we can do operational transform in more places. I have a sister project for C versions [here](https://github.com/share/libot) that I might merge in at some point.
 
 [![Build Status](https://secure.travis-ci.org/josephg/ot-types.png)](http://travis-ci.org/josephg/ot-types)
 
@@ -41,10 +41,6 @@ Transform property 2 is an additional requirement on your *transform* function. 
 - **tp2**: *(optional)* Boolean property. Make this truthy to declare that the type has tp2 support. Types with TP2 support must define *prune*.
 - **prune(op, otherOp)**: The inverse of transform. Formally, apply(snapshot, op1) == apply(snapshot, prune(transform(op1, op2), op2)). Usually, prune will simply be the inverse of transform and prune(transform(op1, op2), op2) == op1.
 
-
-# Coffeescript, eh?
-
-The types are in coffeescript because its good. But, I've had my zealotry ground away over time. I have no problem with types in this repository existing in any language so long as running `make` compiles them to javascript.
 
 
 # License
