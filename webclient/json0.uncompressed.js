@@ -458,20 +458,16 @@ json.apply = function(snapshot, op) {
       elem[key] += c.na;
     }
 
-    else
-
     // String insert
-    if (c.si !== void 0) {
+    else if (c.si !== void 0) {
       if (typeof elem != 'string')
         throw new Error('Referenced element not a string (it was '+JSON.stringify(elem)+')');
 
       parent[parentKey] = elem.slice(0,key) + c.si + elem.slice(key);
     }
 
-    else
-
     // String delete
-    if (c.sd !== void 0) {
+    else if (c.sd !== void 0) {
       if (typeof elem != 'string')
         throw new Error('Referenced element not a string');
 
@@ -481,36 +477,28 @@ json.apply = function(snapshot, op) {
       parent[parentKey] = elem.slice(0,key) + elem.slice(key + c.sd.length);
     }
 
-    else
-
     // List replace
-    if (c.li !== void 0 && c.ld !== void 0) {
+    else if (c.li !== void 0 && c.ld !== void 0) {
       json.checkList(elem);
       // Should check the list element matches c.ld
       elem[key] = c.li;
     }
 
-    else
-
     // List insert
-    if (c.li !== void 0) {
+    else if (c.li !== void 0) {
       json.checkList(elem);
       elem.splice(key,0, c.li);
     }
 
-    else
-
     // List delete
-    if (c.ld !== void 0) {
+    else if (c.ld !== void 0) {
       json.checkList(elem);
       // Should check the list element matches c.ld here too.
       elem.splice(key,1);
     }
 
-    else
-
     // List move
-    if (c.lm !== void 0) {
+    else if (c.lm !== void 0) {
       json.checkList(elem);
       if (c.lm != key) {
         var e = elem[key];
@@ -521,20 +509,16 @@ json.apply = function(snapshot, op) {
       }
     }
 
-    else
-
     // Object insert / replace
-    if (c.oi !== void 0) {
+    else if (c.oi !== void 0) {
       json.checkObj(elem);
 
       // Should check that elem[key] == c.od
       elem[key] = c.oi;
     }
 
-    else
-
     // Object delete
-    if (c.od !== void 0) {
+    else if (c.od !== void 0) {
       json.checkObj(elem);
 
       // Should check that elem[key] == c.od
@@ -653,8 +637,8 @@ json.normalize = function(op) {
 
   for (var i = 0; i < op.length; i++) {
     var c = op[i];
-    if (c.p == null)
-      c.p = [];
+    if (c.p == null) c.p = [];
+
     json.append(newOp,c);
   }
 
@@ -663,21 +647,15 @@ json.normalize = function(op) {
 
 // Returns true if an op at otherPath may affect an op at path
 json.canOpAffectOp = function(otherPath,path) {
-  if (otherPath.length === 0)
-    return true;
-
-  if (path.length === 0)
-    return false;
+  if (otherPath.length === 0) return true;
+  if (path.length === 0) return false;
 
   path = path.slice(0,path.length - 1);
   otherPath = otherPath.slice(0,otherPath.length - 1);
 
   for (var i = 0; i < otherPath.length; i++) {
     var p = otherPath[i];
-    if (i >= path.length)
-      return false;
-    if (p != path[i])
-      return false;
+    if (i >= path.length || p != path[i]) return false;
   }
 
   // Same
@@ -751,27 +729,28 @@ json.transformComponent = function(dest, c, otherC, type) {
     } else if (otherC.si !== void 0 || otherC.sd !== void 0) {
       // String op vs string op - pass through to text type
       if (c.si !== void 0 || c.sd !== void 0) {
-        if (!commonOperand)
-          throw new Error('must be a string?');
+        if (!commonOperand) throw new Error('must be a string?');
 
-        // Convert an op component to a text op component
-
+        // Convert an op component to a text op component so we can use the
+        // text type's transform function
         var tc1 = _convertToTextComponent(c);
         var tc2 = _convertToTextComponent(otherC);
 
         var res = [];
 
+        // actually transform
         text._tc(res, tc1, tc2, type);
+        
+        // .... then convert the result back into a JSON op again.
         for (var i = 0; i < res.length; i++) {
+          // Text component
           var tc = res[i];
-          var jc = {
-            p: c.p.slice(0, common)
-          };
+          // JSON component
+          var jc = {p: c.p.slice(0, common)};
           jc.p.push(tc.p);
-          if (tc.i != null)
-            jc.si = tc.i;
-          if (tc.d != null)
-            jc.sd = tc.d;
+
+          if (tc.i != null) jc.si = tc.i;
+          if (tc.d != null) jc.sd = tc.d;
           json.append(dest, jc);
         }
         return dest;
@@ -865,11 +844,9 @@ json.transformComponent = function(dest, c, otherC, type) {
             }
           } else {
             // they moved around it
-            if (from > otherFrom)
-              c.p[common]--;
-            if (from > otherTo) {
-              c.p[common]++;
-            } else if (from === otherTo) {
+            if (from > otherFrom) c.p[common]--;
+            if (from > otherTo) c.p[common]++;
+            else if (from === otherTo) {
               if (otherFrom > otherTo) {
                 c.p[common]++;
                 if (from === to) // ugh, again
@@ -890,13 +867,10 @@ json.transformComponent = function(dest, c, otherC, type) {
               // if we're both moving in the same direction, tie break
               if ((otherTo > otherFrom && to > from) ||
                   (otherTo < otherFrom && to < from)) {
-                if (type === 'right')
-                  c.lm++;
+                if (type === 'right') c.lm++;
               } else {
-                if (to > from)
-                  c.lm++;
-                else if (to === otherFrom)
-                  c.lm--;
+                if (to > from) c.lm++;
+                else if (to === otherFrom) c.lm--;
               }
             }
           }
@@ -906,10 +880,8 @@ json.transformComponent = function(dest, c, otherC, type) {
         var from = otherC.p[common];
         var to = otherC.lm;
         p = c.p[common];
-        if (p > from)
-          c.p[common]--;
-        if (p > to)
-          c.p[common]++;
+        if (p > from) c.p[common]--;
+        if (p > to) c.p[common]++;
       } else {
         // ld, ld+li, si, sd, na, oi, od, oi+od, any li on an element beneath
         // the lm
@@ -921,14 +893,9 @@ json.transformComponent = function(dest, c, otherC, type) {
         if (p === from) {
           c.p[common] = to;
         } else {
-          if (p > from)
-            c.p[common]--;
-          if (p > to) {
-            c.p[common]++;
-          } else if (p === to) {
-            if (from > to)
-              c.p[common]++;
-          }
+          if (p > from) c.p[common]--;
+          if (p > to) c.p[common]++;
+          else if (p === to && from > to) c.p[common]++;
         }
       }
     }
