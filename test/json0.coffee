@@ -180,9 +180,13 @@ genTests = (type) ->
     describe '#create()', -> it 'returns null', ->
       assert.deepEqual type.create(), null
 
-    describe '#compose()', -> it 'od,oi --> od+oi', ->
-      assert.deepEqual [{p:['foo'], od:1, oi:2}], type.compose [{p:['foo'],od:1}],[{p:['foo'],oi:2}]
-      assert.deepEqual [{p:['foo'], od:1},{p:['bar'], oi:2}], type.compose [{p:['foo'],od:1}],[{p:['bar'],oi:2}]
+    describe '#compose()', ->
+      it 'od,oi --> od+oi', ->
+        assert.deepEqual [{p:['foo'], od:1, oi:2}], type.compose [{p:['foo'],od:1}],[{p:['foo'],oi:2}]
+        assert.deepEqual [{p:['foo'], od:1},{p:['bar'], oi:2}], type.compose [{p:['foo'],od:1}],[{p:['bar'],oi:2}]
+      it 'merges od+oi, od+oi -> od+oi', ->
+        assert.deepEqual [{p:['foo'], od:1, oi:2}], type.compose [{p:['foo'],od:1,oi:3}],[{p:['foo'],od:3,oi:2}]
+
 
     describe '#transform()', -> it 'returns sane values', ->
       t = (op1, op2) ->
