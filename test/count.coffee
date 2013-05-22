@@ -1,6 +1,6 @@
 # This is a simple test of the randomizer, using a trivial OT type.
 
-randomizer = require './randomizer'
+randomizer = require '../randomizer'
 
 # Each op is [expectedSnapshot, increment]. This type is not intended for actual use.
 count = {}
