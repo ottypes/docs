@@ -8,6 +8,11 @@ randomizer = require '../randomizer'
 text = require '../lib/text-tp2'
 
 describe 'text-tp2', ->
+  it 'creates using provided string data', ->
+    assert.deepEqual ['hi'], text.serialize text.create 'hi'
+    assert.deepEqual [], text.serialize text.create ''
+    assert.deepEqual [], text.serialize text.create()
+
   it 'transforms sanely', ->
     tc = (op1, op2, expected, delta) ->
       if delta?
@@ -93,6 +98,7 @@ describe 'text-tp2', ->
 
     ta [''], [{i: 5}], [5]
     ta ['abc', 1, 'defghij'], [{d:5}, 6], [5, 'efghij']
+    ta [5, 'hi there', 5], [3, {d:4}, 11], [7, ' there', 5]
 
   it 'composes', ->
     tc = (op1, op2, expected) ->
