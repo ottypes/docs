@@ -25,7 +25,7 @@
     "transform"
   ],
   "author": "Joseph Gentle <josephg@gmail.com>",
-  "license": "BSD",
+  "license": "MIT",
   "readmeFilename": "README.md",
   "gitHead": "1ca38c758dd0ae57142bf892e318ea5a29e9cf92"
 }
