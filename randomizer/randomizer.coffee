@@ -74,13 +74,11 @@ testRandomOp = (type, initialDoc = type.create()) ->
       assert.deepEqual a, b
 
   # First, test type.apply.
-  testApply = (doc) ->
+  for set in opSets
     s = clone initialDoc
-    s = type.apply s, op for op in doc.ops
+    s = type.apply s, op for op in set.ops
 
-    checkSnapshotsEq s, doc.result
-  
-  testApply set for set in opSets
+    checkSnapshotsEq s, set.result
 
   if type.invert?
     # Invert all the ops and apply them to result. Should end up with initialDoc.
