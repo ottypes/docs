@@ -80,6 +80,17 @@ testRandomOp = (type, initialDoc = type.create()) ->
 
     checkSnapshotsEq s, set.result
 
+  # If the type has a shatter function, we should be able to shatter all the
+  # ops, apply them and get the same results.
+  if type.shatter
+    for set in opSets
+      s = clone initialDoc
+      for op in set.ops
+        for atom in type.shatter op
+          s = type.apply s, atom
+
+      checkSnapshotsEq s, set.result
+
   if type.invert?
     # Invert all the ops and apply them to result. Should end up with initialDoc.
     testInvert = (doc, ops = doc.ops) ->
