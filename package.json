@@ -1,6 +1,6 @@
 {
   "name": "ottypes",
-  "version": "1.0.0alpha",
+  "version": "1.0.0",
   "description": "Operational transform types collection",
   "main": "lib/index.js",
   "directories": {
@@ -22,6 +22,7 @@
   },
   "keywords": [
     "OT",
+    "operational transformation",
     "transform"
   ],
   "author": "Joseph Gentle <josephg@gmail.com>",
