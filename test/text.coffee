@@ -68,35 +68,35 @@ describe 'text', ->
     assert.deepEqual ['ab'], text.normalize [0, 'a', 0, 'b', 0]
     assert.deepEqual ['a', 1, 'b'], text.normalize ['a', 1, 'b']
 
-  describe '#cursorEq', ->
+  describe '#selectionEq', ->
     it 'just does equality on plain numbers', ->
-      assert text.cursorEq 5, 5
-      assert text.cursorEq 0, 0
-      assert.equal false, text.cursorEq 0, 1
-      assert.equal false, text.cursorEq 5, 1
+      assert text.selectionEq 5, 5
+      assert text.selectionEq 0, 0
+      assert.equal false, text.selectionEq 0, 1
+      assert.equal false, text.selectionEq 5, 1
 
     it 'compares pairs correctly', ->
-      assert text.cursorEq [1,2], [1,2]
-      assert text.cursorEq [2,2], [2,2]
-      assert text.cursorEq [0,0], [0,0]
-      assert text.cursorEq [0,1], [0,1]
-      assert text.cursorEq [1,0], [1,0]
+      assert text.selectionEq [1,2], [1,2]
+      assert text.selectionEq [2,2], [2,2]
+      assert text.selectionEq [0,0], [0,0]
+      assert text.selectionEq [0,1], [0,1]
+      assert text.selectionEq [1,0], [1,0]
 
-      assert.equal false, text.cursorEq [1,2], [1,0]
-      assert.equal false, text.cursorEq [0,2], [0,1]
-      assert.equal false, text.cursorEq [1,0], [5,0]
-      assert.equal false, text.cursorEq [1,1], [5,5]
+      assert.equal false, text.selectionEq [1,2], [1,0]
+      assert.equal false, text.selectionEq [0,2], [0,1]
+      assert.equal false, text.selectionEq [1,0], [5,0]
+      assert.equal false, text.selectionEq [1,1], [5,5]
 
     it 'works with array vs number', ->
-      assert text.cursorEq 0, [0,0]
-      assert text.cursorEq 1, [1,1]
-      assert text.cursorEq [0,0], 0
-      assert text.cursorEq [1,1], 1
+      assert text.selectionEq 0, [0,0]
+      assert text.selectionEq 1, [1,1]
+      assert text.selectionEq [0,0], 0
+      assert text.selectionEq [1,1], 1
 
-      assert.equal false, text.cursorEq 1, [1,0]
-      assert.equal false, text.cursorEq 0, [0,1]
-      assert.equal false, text.cursorEq [1,2], 1
-      assert.equal false, text.cursorEq [0,2], 0
+      assert.equal false, text.selectionEq 1, [1,0]
+      assert.equal false, text.selectionEq 0, [0,1]
+      assert.equal false, text.selectionEq [1,2], 1
+      assert.equal false, text.selectionEq [0,2], 0
 
   describe '#transformCursor()', ->
     # This test was copied from https://github.com/josephg/libot/blob/master/test.c
@@ -105,8 +105,8 @@ describe 'text', ->
     op = [10, 'oh hi', 10, {d:20}] # The previous ops composed together
 
     tc = (op, isOwn, cursor, expected) ->
-      assert text.cursorEq expected, text.transformCursor cursor, op, isOwn
-      assert text.cursorEq expected, text.transformCursor [cursor, cursor], op, isOwn
+      assert text.selectionEq expected, text.transformCursor cursor, op, isOwn
+      assert text.selectionEq expected, text.transformCursor [cursor, cursor], op, isOwn
  
     it "shouldn't move a cursor at the start of the inserted text", ->
       tc op, false, 10, 10
