@@ -206,3 +206,16 @@ describe 'text', ->
       str = text.apply str, inverseOp
 
       expect(str).to.be.eql 'hel'
+
+    it 'inverts insertion with multiple character skips', ->
+      str = text.create('hlo ')
+      op = [1, 'el', 3, 'world']
+      str = text.apply str, op
+
+      expect(str).to.be.eql 'hello world'
+      inverseOp = text.semanticInvert str, op
+
+      expect(inverseOp).to.be.eql [1, {d: 2}, 3, {d: 5}]
+      str = text.apply str, inverseOp
+
+      expect(str).to.be.eql 'hlo '
