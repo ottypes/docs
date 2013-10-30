@@ -10,7 +10,8 @@
   "devDependencies": {
     "coffee-script": "*",
     "mocha": "~1",
-    "uglify-js": "*"
+    "uglify-js": "*",
+    "chai": "~1.8.1"
   },
   "scripts": {
     "prepublish": "make all",
