@@ -147,11 +147,7 @@ describe 'text', ->
       tc op, false, 40, 25
       tc op, false, 41, 26
 
-  describe 'randomizer', -> it 'passes', ->
-    @slow 1500
-    randomizer text
-
-  describe.only 'semanticInvert', ->
+  describe 'semanticInvert', ->
     it 'exists', ->
       expect(text.semanticInvert).to.be.a 'function'
 
@@ -219,3 +215,8 @@ describe 'text', ->
       str = text.apply str, inverseOp
 
       expect(str).to.be.eql 'hlo '
+
+  describe.only 'randomizer', -> it 'passes', ->
+    @slow 1500
+    randomizer text, 10
+
