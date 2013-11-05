@@ -216,7 +216,7 @@ describe 'text', ->
 
       expect(str).to.be.eql 'hlo '
 
-  describe.only 'randomizer', -> it 'passes', ->
+  describe 'randomizer', -> it 'passes', ->
     @slow 1500
-    randomizer text, 10
+    randomizer text
 

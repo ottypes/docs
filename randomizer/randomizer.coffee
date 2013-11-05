@@ -3,8 +3,8 @@ util = require 'util'
 fs = require 'fs'
 
 # You can use this to enable debugging info in this file.
-p = util.debug
-i = (o) -> util.inspect(o, colors:true, depth:3)
+p = -> #util.debug
+i = -> #(o) -> util.inspect(o, colors:true, depth:3)
 
 # By default, use a new seed every 6 hours. This balances making test runs stable while debugging
 # with avoiding obscure bugs caused by a rare seed.
@@ -111,16 +111,15 @@ testRandomOp = (type, initialDoc = type.create()) ->
     # Invert all the ops and apply them to result. Should end up with initialDoc.
     testSemanticInvert = (doc, ops = doc.ops) ->
       snapshot = clone doc.result
-      tmpSnapshot = clone initialDoc
 
       for op, i in ops
         tmpOps = ops.slice(0, ops.length - i - 1)
         tmpSnapshot = tmpOps.reduce((acc, num) ->
           type.apply acc, num
-        , tmpSnapshot)
+        , clone initialDoc)
+
         # Take operations from right to left
         op_ = type.semanticInvert tmpSnapshot, ops[ops.length - i - 1]
-        p 'op_', op_
         snapshot = type.apply snapshot, op_
 
       checkSnapshotsEq snapshot, initialDoc
