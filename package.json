@@ -1,6 +1,6 @@
 {
   "name": "ottypes",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Operational transform types collection",
   "main": "lib/index.js",
   "directories": {
