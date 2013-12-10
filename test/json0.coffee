@@ -328,19 +328,45 @@ genTests = (type) ->
       leftOps = [ {"p":[],"od":null,"oi":""} ]
       rightHas = type.apply(null, rightOps)
       leftHas = type.apply(null, leftOps)
-        
+
       [left_, right_] = transformX type, leftOps, rightOps
       assert.deepEqual leftHas, type.apply rightHas, left_
       assert.deepEqual leftHas, type.apply leftHas, right_
 
-    
+
     it 'An attempt to re-delete a key becomes a no-op', ->
       assert.deepEqual [], type.transform [{p:['k'], od:'x'}], [{p:['k'], od:'x'}], 'left'
       assert.deepEqual [], type.transform [{p:['k'], od:'x'}], [{p:['k'], od:'x'}], 'right'
 
+  describe 'filterSnapshot', ->
+    paths = ["name", "count", "tags", "contact"]
+    doc = {
+      name: "ian"
+      count: 2
+      tags: ["1337", "hacker"]
+      contact: {
+        email: "ian@lever.co"
+        phone: "867-5309"
+      }
+    }
+    it 'filters properly', ->
+      assert.deepEqual type.filterSnapshot(doc, ["name", "count"]), {
+        name: "ian"
+        count: 2
+      }
+
+  describe 'filterOp', ->
+    # string, number, array, object
+    paths = ["name", "count", "tags", "contact"]
+    it 'filters na'
+    it 'filters si'
+    it 'filters sd'
+
+
   describe 'randomizer', -> it 'passes', ->
     @slow 6000
     randomizer type, 1000
+
 
 describe 'json', ->
   describe 'native type', -> genTests nativetype
