@@ -50,7 +50,7 @@ randomPath = (data) ->
 
     path.push key
     data = data[key]
-  
+
   path
 
 
@@ -106,7 +106,7 @@ json0.generateRandomOp = (data) ->
 
         path.push pos
         parent[key] = operand[...pos] + str + operand[pos..]
-        {p:path, si:str}
+        c = {p:path, si:str}
       else
         # Delete
         pos = randomInt(operand.length)
@@ -115,7 +115,19 @@ json0.generateRandomOp = (data) ->
 
         path.push pos
         parent[key] = operand[...pos] + operand[pos + length..]
-        {p:path, sd:str}
+        c = {p:path, sd:str}
+
+      if json0._testStringSubtype
+        # Subtype
+        subOp = {p:path.pop()}
+        if c.si?
+          subOp.i = c.si
+        else
+          subOp.d = c.sd
+
+        c = {p:path, t:'text0', o:[subOp]}
+
+      c
 
     else if typeof operand == 'number'
       # Number
@@ -163,6 +175,3 @@ json0.generateRandomOp = (data) ->
         {p:path, od:clone(obj)}
 
   [op, container.data]
-
-
-

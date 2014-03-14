@@ -374,10 +374,15 @@ genTests = (type) ->
       assert.deepEqual [], type.transform [{p:['k'], od:'x'}], [{p:['k'], od:'x'}], 'left'
       assert.deepEqual [], type.transform [{p:['k'], od:'x'}], [{p:['k'], od:'x'}], 'right'
 
-  describe 'randomizer', -> it 'passes', ->
-    @slow 6000
-    randomizer type, 1000
+  describe 'randomizer', ->
+    it 'passes', ->
+      @slow 6000
+      randomizer type, 1000
 
-describe 'json', ->
+    it 'passes with string subtype', ->
+      type._testStringSubtype = true # hack
+      randomizer type, 1000
+      delete type._testStringSubtype
+
   describe 'native type', -> genTests nativetype
   #exports.webclient = genTests require('../helpers/webclient').types.json
