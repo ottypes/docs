@@ -337,7 +337,7 @@ text.invert = function(op) {
   return op;
 };
 
-if (typeof require === 'undefined') {
+if (exports._bootstrapTransform) {
   exports._bootstrapTransform(text, transformComponent, checkValidOp, append);
 } else {
   require('./helpers')._bootstrapTransform(text, transformComponent, checkValidOp, append);
@@ -378,28 +378,35 @@ var clone = function(o) {
 };
 
 /**
- * Reference to the Text OT type. This is used for the JSON String operations.
- * @type {*}
- */
-if (typeof text === 'undefined')
-  var text = typeof require !== "undefined" ? require('./text0') : window.ottypes.text;
-
-/**
  * JSON OT Type
  * @type {*}
  */
-var json = { 
+var json = {
   name: 'json0',
   uri: 'http://sharejs.org/types/JSONv0'
 };
 
+// You can register another OT type as a subtype in a JSON document using
+// the following function. This allows another type to handle certain
+// operations instead of the builtin JSON type.
+var subtypes = {};
+json.registerSubtype = function(subtype) {
+  subtypes[subtype.name] = subtype;
+};
+
 json.create = function(data) {
   // Null instead of undefined if you don't pass an argument.
-  return data === undefined ? null : data;
+  return data === undefined ? null : clone(data);
 };
 
 json.invertComponent = function(c) {
   var c_ = {p: c.p};
+
+  // handle subtype ops
+  if (c.t && subtypes[c.t]) {
+    c_.t = c.t;
+    c_.o = subtypes[c.t].invert(c.o);
+  }
 
   if (c.si !== void 0) c_.sd = c.si;
   if (c.sd !== void 0) c_.si = c.sd;
@@ -443,6 +450,23 @@ json.checkObj = function(elem) {
   }
 };
 
+// helper functions to convert old string ops to and from subtype ops
+function convertFromText(c) {
+  c.t = 'text0';
+  var o = {p: c.p.pop()};
+  if (c.si != null) o.i = c.si;
+  if (c.sd != null) o.d = c.sd;
+  c.o = [o];
+}
+
+function convertToText(c) {
+  c.p.push(c.o[0].p);
+  if (c.o[0].i != null) c.si = c.o[0].i;
+  if (c.o[0].d != null) c.sd = c.o[0].d;
+  delete c.t;
+  delete c.o;
+}
+
 json.apply = function(snapshot, op) {
   json.checkValidOp(op);
 
@@ -454,6 +478,10 @@ json.apply = function(snapshot, op) {
 
   for (var i = 0; i < op.length; i++) {
     var c = op[i];
+
+    // convert old string ops to use subtype for backwards compatibility
+    if (c.si != null || c.sd != null)
+      convertFromText(c);
 
     var parent = null;
     var parentKey = null;
@@ -472,31 +500,16 @@ json.apply = function(snapshot, op) {
         throw new Error('Path invalid');
     }
 
+    // handle subtype ops
+    if (c.t && c.o && subtypes[c.t]) {
+      elem[key] = subtypes[c.t].apply(elem[key], c.o);
+
     // Number add
-    if (c.na !== void 0) {
+    } else if (c.na !== void 0) {
       if (typeof elem[key] != 'number')
         throw new Error('Referenced element not a number');
 
       elem[key] += c.na;
-    }
-
-    // String insert
-    else if (c.si !== void 0) {
-      if (typeof elem != 'string')
-        throw new Error('Referenced element not a string (it was '+JSON.stringify(elem)+')');
-
-      parent[parentKey] = elem.slice(0,key) + c.si + elem.slice(key);
-    }
-
-    // String delete
-    else if (c.sd !== void 0) {
-      if (typeof elem != 'string')
-        throw new Error('Referenced element not a string');
-
-      if (elem.slice(key,key + c.sd.length) !== c.sd)
-        throw new Error('Deleted string does not match');
-
-      parent[parentKey] = elem.slice(0,key) + elem.slice(key + c.sd.length);
     }
 
     // List replace
@@ -573,7 +586,7 @@ json.incrementalApply = function(snapshot, op, _yield) {
     // I'd just call this yield, but thats a reserved keyword. Bah!
     _yield(smallOp, snapshot);
   }
-  
+
   return snapshot;
 };
 
@@ -590,23 +603,40 @@ var pathMatches = json.pathMatches = function(p1, p2, ignoreLast) {
   return true;
 };
 
-var _convertToTextComponent = function(component) {
-  var newC = {p: component.p[component.p.length - 1]};
-  if (component.si != null) {
-    newC.i = component.si;
-  } else {
-    newC.d = component.sd;
-  }
-  return newC;
-};
-
 json.append = function(dest,c) {
   c = clone(c);
 
-  var last;
+  if (dest.length === 0) {
+    dest.push(c);
+    return;
+  }
 
-  if (dest.length != 0 && pathMatches(c.p, (last = dest[dest.length - 1]).p)) {
-    if (last.na != null && c.na != null) {
+  var last = dest[dest.length - 1];
+
+  // convert old string ops to use subtype for backwards compatibility
+  if ((c.si != null || c.sd != null) && (last.si != null || last.sd != null)) {
+    convertFromText(c);
+    convertFromText(last);
+  }
+
+  if (pathMatches(c.p, last.p)) {
+    // handle subtype ops
+    if (c.t && last.t && c.t === last.t && subtypes[c.t]) {
+      last.o = subtypes[c.t].compose(last.o, c.o);
+
+      // convert back to old string ops
+      if (c.si != null || c.sd != null) {
+        var p = c.p;
+        for (var i = 0; i < last.o.length - 1; i++) {
+          c.o = [last.o.pop()];
+          c.p = p.slice();
+          convertToText(c);
+          dest.push(c);
+        }
+
+        convertToText(last);
+      }
+    } else if (last.na != null && c.na != null) {
       dest[dest.length - 1] = {p: last.p, na: last.na + c.na};
     } else if (last.li !== undefined && c.li === undefined && c.ld === last.li) {
       // insert immediately followed by delete becomes a noop.
@@ -634,27 +664,13 @@ json.append = function(dest,c) {
     } else {
       dest.push(c);
     }
-  } else if (dest.length != 0 && pathMatches(c.p, last.p, true)) {
-    if ((c.si != null || c.sd != null) && (last.si != null || last.sd != null)) {
-      // Try to compose the string ops together using text's equivalent methods
-      var textOp = [_convertToTextComponent(last)];
-      text._append(textOp, _convertToTextComponent(c));
-      
-      // Then convert back.
-      if (textOp.length !== 1) {
-        dest.push(c);
-      } else {
-        var textC = textOp[0];
-        last.p[last.p.length - 1] = textC.p;
-        if (textC.i != null)
-          last.si = textC.i;
-        else
-          last.sd = textC.d;
-      }
-    } else {
-      dest.push(c);
-    }
   } else {
+    // convert string ops back
+    if ((c.si != null || c.sd != null) && (last.si != null || last.sd != null)) {
+      convertToText(c);
+      convertToText(last);
+    }
+
     dest.push(c);
   }
 };
@@ -688,68 +704,47 @@ json.normalize = function(op) {
 };
 
 // Returns true if an op at otherPath may affect an op at path
-json.canOpAffectOp = function(otherPath,path) {
-  if (otherPath.length === 0) return true;
-  if (path.length === 0) return false;
+json.commonLengthForOps = function(a, b) {
+  var alen = a.p.length;
+  var blen = b.p.length;
+  if (a.na != null || a.t)
+    alen++;
 
-  path = path.slice(0,path.length - 1);
-  otherPath = otherPath.slice(0,otherPath.length - 1);
+  if (b.na != null || b.t)
+    blen++;
 
-  for (var i = 0; i < otherPath.length; i++) {
-    var p = otherPath[i];
-    if (i >= path.length || p != path[i]) return false;
+  if (alen === 0) return -1;
+  if (blen === 0) return null;
+
+  alen--;
+  blen--;
+
+  for (var i = 0; i < alen; i++) {
+    var p = a.p[i];
+    if (i >= blen || p !== b.p[i])
+      return null;
   }
 
-  // Same
-  return true;
+  return alen;
 };
 
 // transform c so it applies to a document with otherC applied.
 json.transformComponent = function(dest, c, otherC, type) {
   c = clone(c);
 
-  if (c.na !== void 0)
-    c.p.push(0);
-
-  if (otherC.na !== void 0)
-    otherC.p.push(0);
-
-  var common;
-  if (json.canOpAffectOp(otherC.p, c.p))
-    common = otherC.p.length - 1;
-
-  var common2;
-  if (json.canOpAffectOp(c.p,otherC.p))
-    common2 = c.p.length - 1;
-
+  var common = json.commonLengthForOps(otherC, c);
+  var common2 = json.commonLengthForOps(c, otherC);
   var cplength = c.p.length;
   var otherCplength = otherC.p.length;
 
-  if (c.na !== void 0) // hax
-    c.p.pop();
+  if (c.na != null || c.t)
+    cplength++;
 
-  if (otherC.na !== void 0)
-    otherC.p.pop();
-
-  if (otherC.na) {
-    if (common2 != null && otherCplength >= cplength && otherC.p[common2] == c.p[common2]) {
-      if (c.ld !== void 0) {
-        var oc = clone(otherC);
-        oc.p = oc.p.slice(cplength);
-        c.ld = json.apply(clone(c.ld),[oc]);
-      } else if (c.od !== void 0) {
-        var oc = clone(otherC);
-        oc.p = oc.p.slice(cplength);
-        c.od = json.apply(clone(c.od),[oc]);
-      }
-    }
-    json.append(dest,c);
-    return dest;
-  }
+  if (otherC.na != null || otherC.t)
+    otherCplength++;
 
   // if c is deleting something, and that thing is changed by otherC, we need to
   // update c to reflect that change for invertibility.
-  // TODO this is probably not needed since we don't have invertibility
   if (common2 != null && otherCplength > cplength && c.p[common2] == otherC.p[common2]) {
     if (c.ld !== void 0) {
       var oc = clone(otherC);
@@ -765,38 +760,42 @@ json.transformComponent = function(dest, c, otherC, type) {
   if (common != null) {
     var commonOperand = cplength == otherCplength;
 
-    // transform based on otherC
-    if (otherC.na !== void 0) {
-      // this case is handled above due to icky path hax
-    } else if (otherC.si !== void 0 || otherC.sd !== void 0) {
-      // String op vs string op - pass through to text type
-      if (c.si !== void 0 || c.sd !== void 0) {
-        if (!commonOperand) throw new Error('must be a string?');
+    // backward compatibility for old string ops
+    var oc = otherC;
+    if ((c.si != null || c.sd != null) && (otherC.si != null || otherC.sd != null)) {
+      convertFromText(c);
+      oc = clone(otherC);
+      convertFromText(oc);
+    }
 
-        // Convert an op component to a text op component so we can use the
-        // text type's transform function
-        var tc1 = _convertToTextComponent(c);
-        var tc2 = _convertToTextComponent(otherC);
+    // handle subtype ops
+    if (oc.t && subtypes[oc.t]) {
+      if (c.t && c.t === oc.t) {
+        var res = subtypes[c.t].transform(c.o, oc.o, type);
 
-        var res = [];
-
-        // actually transform
-        text._tc(res, tc1, tc2, type);
-        
-        // .... then convert the result back into a JSON op again.
-        for (var i = 0; i < res.length; i++) {
-          // Text component
-          var tc = res[i];
-          // JSON component
-          var jc = {p: c.p.slice(0, common)};
-          jc.p.push(tc.p);
-
-          if (tc.i != null) jc.si = tc.i;
-          if (tc.d != null) jc.sd = tc.d;
-          json.append(dest, jc);
+        if (res.length > 0) {
+          // convert back to old string ops
+          if (c.si != null || c.sd != null) {
+            var p = c.p;
+            for (var i = 0; i < res.length; i++) {
+              c.o = [res[i]];
+              c.p = p.slice();
+              convertToText(c);
+              json.append(dest, c);
+            }
+          } else {
+            c.o = res;
+            json.append(dest, c);
+          }
         }
+
         return dest;
       }
+    }
+
+    // transform based on otherC
+    else if (otherC.na !== void 0) {
+      // this case is handled below
     } else if (otherC.li !== void 0 && otherC.ld !== void 0) {
       if (otherC.p[common] === c.p[common]) {
         // noop
@@ -983,13 +982,19 @@ json.transformComponent = function(dest, c, otherC, type) {
   return dest;
 };
 
-if (typeof require !== "undefined") {
-  require('./helpers')._bootstrapTransform(json, json.transformComponent, json.checkValidOp, json.append);
-} else {
-  // This is kind of awful - come up with a better way to hook this helper code up.
+if (exports._bootstrapTransform) {
   exports._bootstrapTransform(json, json.transformComponent, json.checkValidOp, json.append);
+} else {
+  require('./helpers')._bootstrapTransform(json, json.transformComponent, json.checkValidOp, json.append);
 }
 
+/**
+ * Register a subtype for string operations, using the text0 type.
+ */
+if (typeof text === 'undefined')
+  var text = typeof require !== "undefined" ? require('./text0') : window.ottypes.text;
+
+json.registerSubtype(text);
 module.exports = json;
 // This is included after the JS for each type when we build for the web.
 

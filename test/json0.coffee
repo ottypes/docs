@@ -55,7 +55,7 @@ genTests = (type) ->
       s_c = type.apply rightHas, left_
       c_s = type.apply leftHas, right_
       assert.deepEqual s_c, c_s
-      
+
 
   # Strings should be handled internally by the text type. We'll just do some basic sanity checks here.
   describe 'string', ->
@@ -63,16 +63,35 @@ genTests = (type) ->
       assert.deepEqual 'abc', type.apply 'a', [{p:[1], si:'bc'}]
       assert.deepEqual 'bc', type.apply 'abc', [{p:[0], sd:'a'}]
       assert.deepEqual {x:'abc'}, type.apply {x:'a'}, [{p:['x', 1], si:'bc'}]
-    
+
     describe '#transform()', ->
       it 'splits deletes', ->
         assert.deepEqual type.transform([{p:[0], sd:'ab'}], [{p:[1], si:'x'}], 'left'), [{p:[0], sd:'a'}, {p:[1], sd:'b'}]
-      
+
       it 'cancels out other deletes', ->
         assert.deepEqual type.transform([{p:['k', 5], sd:'a'}], [{p:['k', 5], sd:'a'}], 'left'), []
 
       it 'does not throw errors with blank inserts', ->
         assert.deepEqual type.transform([{p: ['k', 5], si:''}], [{p: ['k', 3], si: 'a'}], 'left'), []
+
+  describe 'string subtype', ->
+    describe '#apply()', ->
+      it 'works', ->
+        assert.deepEqual 'abc', type.apply 'a', [{p:[], t:'text0', o:[{p:1, i:'bc'}]}]
+        assert.deepEqual 'bc', type.apply 'abc', [{p:[], t:'text0', o:[{p:0, d:'a'}]}]
+        assert.deepEqual {x:'abc'}, type.apply {x:'a'}, [{p:['x'], t:'text0', o:[{p:1, i:'bc'}]}]
+
+    describe '#transform()', ->
+      it 'splits deletes', ->
+        a = [{p:[], t:'text0', o:[{p:0, d:'ab'}]}]
+        b = [{p:[], t:'text0', o:[{p:1, i:'x'}]}]
+        assert.deepEqual type.transform(a, b, 'left'), [{p:[], t:'text0', o:[{p:0, d:'a'}, {p:1, d:'b'}]}]
+
+      it 'cancels out other deletes', ->
+        assert.deepEqual type.transform([{p:['k'], t:'text0', o:[{p:5, d:'a'}]}], [{p:['k'], t:'text0', o:[{p:5, d:'a'}]}], 'left'), []
+
+      it 'does not throw errors with blank inserts', ->
+        assert.deepEqual type.transform([{p:['k'], t:'text0', o:[{p:5, i:''}]}], [{p:['k'], t:'text0', o:[{p:3, i:'a'}]}], 'left'), []
 
   describe 'list', ->
     describe 'apply', ->
@@ -85,7 +104,7 @@ genTests = (type) ->
         assert.deepEqual ['b', 'c'], type.apply ['a', 'b', 'c'], [{p:[0], ld:'a'}]
         assert.deepEqual ['a', 'c'], type.apply ['a', 'b', 'c'], [{p:[1], ld:'b'}]
         assert.deepEqual ['a', 'b'], type.apply ['a', 'b', 'c'], [{p:[2], ld:'c'}]
-      
+
       it 'replaces', ->
         assert.deepEqual ['a', 'y', 'b'], type.apply ['a', 'x', 'b'], [{p:[1], ld:'x', li:'y'}]
 
@@ -99,43 +118,52 @@ genTests = (type) ->
         assert.deepEqual [], type.compose [], [{p:[0,3],lm:3}]
         assert.deepEqual [], type.compose [], [{p:['x','y',0],lm:0}]
       ###
-    
+
     describe '#transform()', ->
       it 'bumps paths when list elements are inserted or removed', ->
         assert.deepEqual [{p:[2, 200], si:'hi'}], type.transform [{p:[1, 200], si:'hi'}], [{p:[0], li:'x'}], 'left'
         assert.deepEqual [{p:[1, 201], si:'hi'}], type.transform [{p:[0, 201], si:'hi'}], [{p:[0], li:'x'}], 'right'
         assert.deepEqual [{p:[0, 202], si:'hi'}], type.transform [{p:[0, 202], si:'hi'}], [{p:[1], li:'x'}], 'left'
+        assert.deepEqual [{p:[2], t:'text0', o:[{p:200, i:'hi'}]}], type.transform [{p:[1], t:'text0', o:[{p:200, i:'hi'}]}], [{p:[0], li:'x'}], 'left'
+        assert.deepEqual [{p:[1], t:'text0', o:[{p:201, i:'hi'}]}], type.transform [{p:[0], t:'text0', o:[{p:201, i:'hi'}]}], [{p:[0], li:'x'}], 'right'
+        assert.deepEqual [{p:[0], t:'text0', o:[{p:202, i:'hi'}]}], type.transform [{p:[0], t:'text0', o:[{p:202, i:'hi'}]}], [{p:[1], li:'x'}], 'left'
 
         assert.deepEqual [{p:[0, 203], si:'hi'}], type.transform [{p:[1, 203], si:'hi'}], [{p:[0], ld:'x'}], 'left'
         assert.deepEqual [{p:[0, 204], si:'hi'}], type.transform [{p:[0, 204], si:'hi'}], [{p:[1], ld:'x'}], 'left'
         assert.deepEqual [{p:['x',3], si: 'hi'}], type.transform [{p:['x',3], si:'hi'}], [{p:['x',0,'x'], li:0}], 'left'
         assert.deepEqual [{p:['x',3,'x'], si: 'hi'}], type.transform [{p:['x',3,'x'], si:'hi'}], [{p:['x',5], li:0}], 'left'
         assert.deepEqual [{p:['x',4,'x'], si: 'hi'}], type.transform [{p:['x',3,'x'], si:'hi'}], [{p:['x',0], li:0}], 'left'
+        assert.deepEqual [{p:[0], t:'text0', o:[{p:203, i:'hi'}]}], type.transform [{p:[1], t:'text0', o:[{p:203, i:'hi'}]}], [{p:[0], ld:'x'}], 'left'
+        assert.deepEqual [{p:[0], t:'text0', o:[{p:204, i:'hi'}]}], type.transform [{p:[0], t:'text0', o:[{p:204, i:'hi'}]}], [{p:[1], ld:'x'}], 'left'
+        assert.deepEqual [{p:['x'], t:'text0', o:[{p:3,i: 'hi'}]}], type.transform [{p:['x'], t:'text0', o:[{p:3, i:'hi'}]}], [{p:['x',0,'x'], li:0}], 'left'
 
         assert.deepEqual [{p:[1],ld:2}], type.transform [{p:[0],ld:2}], [{p:[0],li:1}], 'left'
         assert.deepEqual [{p:[1],ld:2}], type.transform [{p:[0],ld:2}], [{p:[0],li:1}], 'right'
 
       it 'converts ops on deleted elements to noops', ->
         assert.deepEqual [], type.transform [{p:[1, 0], si:'hi'}], [{p:[1], ld:'x'}], 'left'
+        assert.deepEqual [], type.transform [{p:[1], t:'text0', o:[{p:0, i:'hi'}]}], [{p:[1], ld:'x'}], 'left'
         assert.deepEqual [{p:[0],li:'x'}], type.transform [{p:[0],li:'x'}], [{p:[0],ld:'y'}], 'left'
         assert.deepEqual [], type.transform [{p:[0],na:-3}], [{p:[0],ld:48}], 'left'
-      
+
       it 'converts ops on replaced elements to noops', ->
         assert.deepEqual [], type.transform [{p:[1, 0], si:'hi'}], [{p:[1], ld:'x', li:'y'}], 'left'
+        assert.deepEqual [], type.transform [{p:[1], t:'text0', o:[{p:0, i:'hi'}]}], [{p:[1], ld:'x', li:'y'}], 'left'
         assert.deepEqual [{p:[0], li:'hi'}], type.transform [{p:[0], li:'hi'}], [{p:[0], ld:'x', li:'y'}], 'left'
 
       it 'changes deleted data to reflect edits', ->
         assert.deepEqual [{p:[1], ld:'abc'}], type.transform [{p:[1], ld:'a'}], [{p:[1, 1], si:'bc'}], 'left'
-   
+        assert.deepEqual [{p:[1], ld:'abc'}], type.transform [{p:[1], ld:'a'}], [{p:[1], t:'text0', o:[{p:1, i:'bc'}]}], 'left'
+
       it 'Puts the left op first if two inserts are simultaneous', ->
         assert.deepEqual [{p:[1], li:'a'}], type.transform [{p:[1], li:'a'}], [{p:[1], li:'b'}], 'left'
         assert.deepEqual [{p:[2], li:'b'}], type.transform [{p:[1], li:'b'}], [{p:[1], li:'a'}], 'right'
-      
+
       it 'converts an attempt to re-delete a list element into a no-op', ->
         assert.deepEqual [], type.transform [{p:[1], ld:'x'}], [{p:[1], ld:'x'}], 'left'
         assert.deepEqual [], type.transform [{p:[1], ld:'x'}], [{p:[1], ld:'x'}], 'right'
 
-   
+
     describe '#compose()', ->
       it 'composes insert then delete into a no-op', ->
         assert.deepEqual [], type.compose [{p:[1], li:'abc'}], [{p:[1], ld:'abc'}]
@@ -148,10 +176,12 @@ genTests = (type) ->
 
       it 'composes together adjacent string ops', ->
         assert.deepEqual [{p:[100], si:'hi'}], type.compose [{p:[100], si:'h'}], [{p:[101], si:'i'}]
-    
+        assert.deepEqual [{p:[], t:'text0', o:[{p:100, i:'hi'}]}], type.compose [{p:[], t:'text0', o:[{p:100, i:'h'}]}], [{p:[], t:'text0', o:[{p:101, i:'i'}]}]
+
     it 'moves ops on a moved element with the element', ->
       assert.deepEqual [{p:[10], ld:'x'}], type.transform [{p:[4], ld:'x'}], [{p:[4], lm:10}], 'left'
       assert.deepEqual [{p:[10, 1], si:'a'}], type.transform [{p:[4, 1], si:'a'}], [{p:[4], lm:10}], 'left'
+      assert.deepEqual [{p:[10], t:'text0', o:[{p:1, i:'a'}]}], type.transform [{p:[4], t:'text0', o:[{p:1, i:'a'}]}], [{p:[4], lm:10}], 'left'
       assert.deepEqual [{p:[10, 1], li:'a'}], type.transform [{p:[4, 1], li:'a'}], [{p:[4], lm:10}], 'left'
       assert.deepEqual [{p:[10, 1], ld:'b', li:'a'}], type.transform [{p:[4, 1], ld:'b', li:'a'}], [{p:[4], lm:10}], 'left'
 
@@ -286,24 +316,29 @@ genTests = (type) ->
       assert.deepEqual {x:'a', y:'b'}, type.apply {x:'a'}, [{p:['y'], oi:'b'}]
       assert.deepEqual {}, type.apply {x:'a'}, [{p:['x'], od:'a'}]
       assert.deepEqual {x:'b'}, type.apply {x:'a'}, [{p:['x'], od:'a', oi:'b'}]
-    
+
     it 'Ops on deleted elements become noops', ->
       assert.deepEqual [], type.transform [{p:[1, 0], si:'hi'}], [{p:[1], od:'x'}], 'left'
+      assert.deepEqual [], type.transform [{p:[1], t:'text0', o:[{p:0, i:'hi'}]}], [{p:[1], od:'x'}], 'left'
       assert.deepEqual [], type.transform [{p:[9],si:"bite "}], [{p:[],od:"agimble s",oi:null}], 'right'
-    
+      assert.deepEqual [], type.transform [{p:[], t:'text0', o:[{p:9, i:"bite "}]}], [{p:[],od:"agimble s",oi:null}], 'right'
+
     it 'Ops on replaced elements become noops', ->
       assert.deepEqual [], type.transform [{p:[1, 0], si:'hi'}], [{p:[1], od:'x', oi:'y'}], 'left'
+      assert.deepEqual [], type.transform [{p:[1], t:'text0', o:[{p:0, i:'hi'}]}], [{p:[1], od:'x', oi:'y'}], 'left'
 
     it 'Deleted data is changed to reflect edits', ->
       assert.deepEqual [{p:[1], od:'abc'}], type.transform [{p:[1], od:'a'}], [{p:[1, 1], si:'bc'}], 'left'
+      assert.deepEqual [{p:[1], od:'abc'}], type.transform [{p:[1], od:'a'}], [{p:[1], t:'text0', o:[{p:1, i:'bc'}]}], 'left'
       assert.deepEqual [{p:[],od:25,oi:[]}], type.transform [{p:[],od:22,oi:[]}], [{p:[],na:3}], 'left'
       assert.deepEqual [{p:[],od:{toves:""},oi:4}], type.transform [{p:[],od:{toves:0},oi:4}], [{p:["toves"],od:0,oi:""}], 'left'
       assert.deepEqual [{p:[],od:"thou an",oi:[]}], type.transform [{p:[],od:"thou and ",oi:[]}], [{p:[7],sd:"d "}], 'left'
+      assert.deepEqual [{p:[],od:"thou an",oi:[]}], type.transform [{p:[],od:"thou and ",oi:[]}], [{p:[], t:'text0', o:[{p:7, d:"d "}]}], 'left'
       assert.deepEqual [], type.transform([{p:["bird"],na:2}], [{p:[],od:{bird:38},oi:20}], 'right')
       assert.deepEqual [{p:[],od:{bird:40},oi:20}], type.transform([{p:[],od:{bird:38},oi:20}], [{p:["bird"],na:2}], 'left')
       assert.deepEqual [{p:['He'],od:[]}], type.transform [{p:["He"],od:[]}], [{p:["The"],na:-3}], 'right'
       assert.deepEqual [], type.transform [{p:["He"],oi:{}}], [{p:[],od:{},oi:"the"}], 'left'
-    
+
     it 'If two inserts are simultaneous, the lefts insert will win', ->
       assert.deepEqual [{p:[1], oi:'a', od:'b'}], type.transform [{p:[1], oi:'a'}], [{p:[1], oi:'b'}], 'left'
       assert.deepEqual [], type.transform [{p:[1], oi:'b'}], [{p:[1], oi:'a'}], 'right'
@@ -313,6 +348,7 @@ genTests = (type) ->
       assert.deepEqual [{p:['a'], oi: 'x'}], type.transform [{p:['a'], oi:'x'}], [{p:['b'], od:'z'}], 'left'
       assert.deepEqual [{p:["in","he"],oi:{}}], type.transform [{p:["in","he"],oi:{}}], [{p:["and"],od:{}}], 'right'
       assert.deepEqual [{p:['x',0],si:"his "}], type.transform [{p:['x',0],si:"his "}], [{p:['y'],od:0,oi:1}], 'right'
+      assert.deepEqual [{p:['x'], t:'text0', o:[{p:0, i:"his "}]}], type.transform [{p:['x'],t:'text0', o:[{p:0, i:"his "}]}], [{p:['y'],od:0,oi:1}], 'right'
 
     it 'replacement vs. deletion', ->
       assert.deepEqual [{p:[],oi:{}}], type.transform [{p:[],od:[''],oi:{}}], [{p:[],od:['']}], 'right'
@@ -322,25 +358,31 @@ genTests = (type) ->
       assert.deepEqual [{p:[],od:null,oi:{}}], type.transform [{p:[],od:['']},{p:[],oi:{}}], [{p:[],od:['']},{p:[],oi:null}], 'left'
       assert.deepEqual [],                     type.transform [{p:[],od:[''],oi:{}}], [{p:[],od:[''],oi:null}], 'right'
       assert.deepEqual [{p:[],od:null,oi:{}}], type.transform [{p:[],od:[''],oi:{}}], [{p:[],od:[''],oi:null}], 'left'
-    
+
       # test diamond property
       rightOps = [ {"p":[],"od":null,"oi":{}} ]
       leftOps = [ {"p":[],"od":null,"oi":""} ]
       rightHas = type.apply(null, rightOps)
       leftHas = type.apply(null, leftOps)
-        
+
       [left_, right_] = transformX type, leftOps, rightOps
       assert.deepEqual leftHas, type.apply rightHas, left_
       assert.deepEqual leftHas, type.apply leftHas, right_
 
-    
+
     it 'An attempt to re-delete a key becomes a no-op', ->
       assert.deepEqual [], type.transform [{p:['k'], od:'x'}], [{p:['k'], od:'x'}], 'left'
       assert.deepEqual [], type.transform [{p:['k'], od:'x'}], [{p:['k'], od:'x'}], 'right'
 
-  describe 'randomizer', -> it 'passes', ->
-    @slow 6000
-    randomizer type, 1000
+  describe 'randomizer', ->
+    it 'passes', ->
+      @slow 6000
+      randomizer type, 1000
+
+    it 'passes with string subtype', ->
+      type._testStringSubtype = true # hack
+      randomizer type, 1000
+      delete type._testStringSubtype
 
 describe 'json', ->
   describe 'native type', -> genTests nativetype
