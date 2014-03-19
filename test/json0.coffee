@@ -384,5 +384,6 @@ genTests = (type) ->
       randomizer type, 1000
       delete type._testStringSubtype
 
+describe 'json', ->
   describe 'native type', -> genTests nativetype
   #exports.webclient = genTests require('../helpers/webclient').types.json
