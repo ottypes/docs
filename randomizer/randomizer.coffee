@@ -4,7 +4,7 @@ fs = require 'fs'
 
 # You can use this to enable debugging info in this file.
 p = -> #util.debug
-i = -> # (o) -> util.inspect o, colors:true, depth:3
+i = -> #(o) -> util.inspect(o, colors:true, depth:3)
 
 # By default, use a new seed every 6 hours. This balances making test runs stable while debugging
 # with avoiding obscure bugs caused by a rare seed.
@@ -42,7 +42,7 @@ transformLists = (type, serverOps, clientOps) ->
       [s, c_] = transformX type, s, c
       c_
     s
-  
+
   [serverOps, clientOps]
 
 # Compose a whole list of ops together
@@ -65,7 +65,7 @@ testRandomOp = (type, initialDoc = type.create()) ->
     [op, doc.result] = type.generateRandomOp doc.result
     doc.ops.push(op)
 
-  p "Doc #{i initialDoc} + #{i ops} = #{i result}" for {ops, result} in [client, client2, server]
+  #p "Doc #{i initialDoc} + #{i ops} = #{i result}" for {ops, result} in [client, client2, server]
 
   checkSnapshotsEq = (a, b) ->
     if type.serialize
@@ -104,8 +104,27 @@ testRandomOp = (type, initialDoc = type.create()) ->
         snapshot = type.apply snapshot, op_
 
       checkSnapshotsEq snapshot, initialDoc
-  
+
     testInvert set for set in opSets
+
+  if type.semanticInvert?
+    # Invert all the ops and apply them to result. Should end up with initialDoc.
+    testSemanticInvert = (doc, ops = doc.ops) ->
+      snapshot = clone doc.result
+
+      for op, i in ops
+        tmpOps = ops.slice(0, ops.length - i - 1)
+        tmpSnapshot = tmpOps.reduce((acc, num) ->
+          type.apply acc, num
+        , clone initialDoc)
+
+        # Take operations from right to left
+        op_ = type.semanticInvert tmpSnapshot, ops[ops.length - i - 1]
+        snapshot = type.apply snapshot, op_
+
+      checkSnapshotsEq snapshot, initialDoc
+
+    testSemanticInvert set for set in opSets
 
   # If all the ops are composed together, then applied, we should get the same result.
   if type.compose?
@@ -119,7 +138,7 @@ testRandomOp = (type, initialDoc = type.create()) ->
     compose set for set in opSets
 
     testInvert? set, [set.composed] for set in opSets when set.composed?
-  
+
     # Check the diamond property holds
     if client.composed? && server.composed?
       [server_, client_] = transformX type, server.composed, client.composed
@@ -160,7 +179,7 @@ testRandomOp = (type, initialDoc = type.create()) ->
 
   if type.prune?
     p 'PRUNE'
-    
+
     [op1] = type.generateRandomOp initialDoc
     [op2] = type.generateRandomOp initialDoc
 
@@ -172,9 +191,9 @@ testRandomOp = (type, initialDoc = type.create()) ->
 
   # Now we'll check the n^2 transform method.
   if client.ops.length > 0 && server.ops.length > 0
-    p "s #{i server.result} c #{i client.result} XF #{i server.ops} x #{i client.ops}"
+    #p "s #{i server.result} c #{i client.result} XF #{i server.ops} x #{i client.ops}"
     [s_, c_] = transformLists type, server.ops, client.ops
-    p "XF result #{i s_} x #{i c_}"
+    #p "XF result #{i s_} x #{i c_}"
 #    p "applying #{i c_} to #{i server.result}"
     s_c = c_.reduce type.apply, clone server.result
     c_s = s_.reduce type.apply, clone client.result
@@ -188,7 +207,7 @@ testRandomOp = (type, initialDoc = type.create()) ->
       checkSnapshotsEq server.result, server_result_
       orig_ = server.ops.slice().reverse().map(type.invert).reduce(type.apply, server_result_)
       checkSnapshotsEq orig_, initialDoc
-  
+
   client.result
 
 collectStats = (type) ->
@@ -198,14 +217,14 @@ collectStats = (type) ->
   orig[fn] = type[fn] for fn in functions when type[fn]?
   restore = ->
     type[fn] = orig[fn] for fn in functions when orig[fn]?
-  
+
   stats = {}
   stats[fn] = 0 for fn in functions when orig[fn]?
 
   collect = (fn) -> (args...) ->
     stats[fn]++
     orig[fn].apply null, args
-  
+
   type[fn] = collect fn for fn in functions when orig[fn]?
 
   [stats, restore]
@@ -223,6 +242,7 @@ module.exports = (type, iterations = 2000) ->
   warnUnless = (fn) -> console.error "NOTE: Not running #{fn} tests because #{type.name} does not have #{fn}() defined" unless type[fn]?
   warnUnless 'invert'
   warnUnless 'compose'
+  warnUnless 'semanticInvert'
 
   doc = type.create()
 

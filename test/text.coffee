@@ -2,6 +2,7 @@
 
 fs = require 'fs'
 assert = require 'assert'
+expect = require('chai').expect
 
 randomizer = require '../randomizer'
 {text} = require '../lib'
@@ -107,13 +108,13 @@ describe 'text', ->
     tc = (op, isOwn, cursor, expected) ->
       assert text.selectionEq expected, text.transformCursor cursor, op, isOwn
       assert text.selectionEq expected, text.transformCursor [cursor, cursor], op, isOwn
- 
+
     it "shouldn't move a cursor at the start of the inserted text", ->
       tc op, false, 10, 10
-  
+
     it "move a cursor at the start of the inserted text if its yours", ->
       tc ins, true, 10, 15
-  
+
     it 'should move a character inside a deleted region to the start of the region', ->
       tc del, false, 25, 25
       tc del, false, 35, 25
@@ -122,13 +123,13 @@ describe 'text', ->
       tc del, true, 25, 25
       tc del, true, 35, 25
       tc del, true, 45, 25
-  
+
     it "shouldn't effect cursors before the deleted region", ->
       tc del, false, 10, 10
-  
+
     it "pulls back cursors past the end of the deleted region", ->
       tc del, false, 55, 35
-  
+
     it "teleports your cursor to the end of the last insert or the delete", ->
       tc ins, true, 0, 15
       tc ins, true, 100, 15
@@ -140,15 +141,82 @@ describe 'text', ->
       tc op, false, 100, 85
       tc op, false, 10, 10
       tc op, false, 11, 16
-  
+
       tc op, false, 20, 25
       tc op, false, 30, 25
       tc op, false, 40, 25
       tc op, false, 41, 26
 
+  describe 'semanticInvert', ->
+    it 'exists', ->
+      expect(text.semanticInvert).to.be.a 'function'
+
+    it 'throws when passed in a non string snapshot', ->
+      fn = -> text.semanticInvert({}, {})
+      expect(fn).to.throw 'Snapshot should be a string'
+
+    it 'throws when passed an invalid op', ->
+      fn = -> text.semanticInvert('', 'hello')
+      expect(fn).to.throw 'Op must be an array of components'
+
+    it 'inverts a single string insertion', ->
+      str = text.create()
+      str = text.apply str, [' world']
+      op = ['hello']
+      str = text.apply str, op
+
+      expect(str).to.be.eql 'hello world'
+      inverseOp = text.semanticInvert str, op
+
+      expect(inverseOp).to.be.eql [{d: 5}]
+      str = text.apply str, inverseOp
+
+      expect(str).to.be.eql ' world'
+
+    it 'inverts a single deletion', ->
+      str = text.create()
+      str = text.apply str, ['hello world']
+      op = [{d: 4}]
+
+      preDel = str
+      str = text.apply str, op
+
+      expect(str).to.be.eql 'o world'
+      inverseOp = text.semanticInvert preDel, op
+
+      expect(inverseOp).to.be.eql ['hell']
+      str = text.apply str, inverseOp
+
+      expect(str).to.be.eql 'hello world'
+
+
+    it 'inverts insertion with character skip', ->
+      str = text.create('hel')
+      op = [3, 'lo world']
+      str = text.apply str, op
+
+      expect(str).to.be.eql 'hello world'
+      inverseOp = text.semanticInvert str, op
+
+      expect(inverseOp).to.be.eql [3, {d: 8}]
+      str = text.apply str, inverseOp
+
+      expect(str).to.be.eql 'hel'
+
+    it 'inverts insertion with multiple character skips', ->
+      str = text.create('hlo ')
+      op = [1, 'el', 3, 'world']
+      str = text.apply str, op
+
+      expect(str).to.be.eql 'hello world'
+      inverseOp = text.semanticInvert str, op
+
+      expect(inverseOp).to.be.eql [1, {d: 2}, 3, {d: 5}]
+      str = text.apply str, inverseOp
+
+      expect(str).to.be.eql 'hlo '
 
   describe 'randomizer', -> it 'passes', ->
     @slow 1500
     randomizer text
-
 
