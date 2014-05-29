@@ -1,0 +1,35 @@
+{
+  "name": "ottypes",
+  "version": "1.0.1",
+  "description": "Operational transform types collection",
+  "main": "lib/index.js",
+  "directories": {
+    "test": "test"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "coffee-script": "*",
+    "mocha": "~1",
+    "uglify-js": "*"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/share/ot-types.git"
+  },
+  "keywords": [
+    "OT",
+    "operational transformation",
+    "transform"
+  ],
+  "author": "Joseph Gentle <josephg@gmail.com>",
+  "license": "MIT",
+  "scripts": [
+    "lib/simple.js"
+  , "lib/text.js"
+  , "lib/text-tp2.js"
+  , "lib/text0.js"
+  , "lib/json0.js"
+  , "lib/index.js"
+  , "lib/helpers.js"
+  ]
+}
