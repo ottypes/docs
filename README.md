@@ -15,7 +15,7 @@ Each OT type exposes a single object with the following properties. Note that on
 ### Standard properties
 
 - **name**: A user-readable name for the type. This is not guaranteed to be unique.
-- **url**: *(Optional, will be required soon)* A canonical location for this type. The spec for the OT type should be at this address. Remember kids, Tim Berners-Lee says [cool URLs don't change](http://www.w3.org/Provider/Style/URI.html).
+- **uri**: *(Optional, will be required soon)* A canonical location for this type. The spec for the OT type should be at this address. Remember kids, Tim Berners-Lee says [cool URLs don't change](http://www.w3.org/Provider/Style/URI.html).
 - **create([initialData]) -> snapshot**: A function to create the initial document snapshot. Create may accept initial snapshot data as its only argument. Either the return value must be a valid target for `JSON.stringify` or you must specify *serialize* and *deserialize* functions (described below).
 - **apply(snapshot, op) -> snapshot'**: Apply an operation to a document snapshot. Returns the changed snapshot. For performance, old document must not be used after this function call, so apply may reuse and return the current snapshot object.
 - **transform(op1, op2, side) -> op1'**: Transform op1 by op2. Return the new op1. Side is either `'left'` or `'right'`. It exists to break ties, for example if two operations insert at the same position in a string. Both op1 and op2 must not be modified by transform.
