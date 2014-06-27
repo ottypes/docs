@@ -159,7 +159,7 @@ json0.generateRandomOp = (data) ->
       # Object
       k = randomKey(operand)
 
-      if randomReal() < 0.5 and not k? and operand[k] is undefined
+      if json0._testOin and not k? and operand[k] is undefined
         # "oin" is only valid when client knows there is no value for the key and 
         # someone can initiate the same key. If we try to insert over existing value
         # (and operation will be ignored since key exists), invertion will fail
@@ -170,7 +170,7 @@ json0.generateRandomOp = (data) ->
         path.push(k);
         operand[k] = obj
         {p:path, oin:clone(obj)}
-      else if randomReal() > 0.7 or not k?
+      else if (randomReal() > 0.7 or not k?) and not json0._testOin
         # Insert
         k = randomNewKey(operand)
         obj = randomThing()

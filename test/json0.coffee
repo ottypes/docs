@@ -406,6 +406,11 @@ genTests = (type) ->
       randomizer type, 1000
       delete type._testStringSubtype
 
+    it 'passes with `oin` operation', ->
+      type._testOin = true # hack
+      randomizer type, 1000
+      delete type._testOin
+
 describe 'json', ->
   describe 'native type', -> genTests nativetype
   #exports.webclient = genTests require('../helpers/webclient').types.json
