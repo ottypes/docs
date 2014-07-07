@@ -501,7 +501,7 @@ json.apply = function(snapshot, op) {
     }
 
     // handle subtype ops
-    if (c.t && c.o && subtypes[c.t]) {
+    if (c.t && c.o !== void 0 && subtypes[c.t]) {
       elem[key] = subtypes[c.t].apply(elem[key], c.o);
 
     // Number add
@@ -703,7 +703,7 @@ json.normalize = function(op) {
   return newOp;
 };
 
-// Returns true if an op at otherPath may affect an op at path
+// Returns the common length of the paths of ops a and b
 json.commonLengthForOps = function(a, b) {
   var alen = a.p.length;
   var blen = b.p.length;
@@ -726,6 +726,11 @@ json.commonLengthForOps = function(a, b) {
   }
 
   return alen;
+};
+
+// Returns true if an op can affect the given path
+json.canOpAffectPath = function(op, path) {
+  return json.commonLengthForOps({p:path}, op) != null;
 };
 
 // transform c so it applies to a document with otherC applied.
