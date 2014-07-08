@@ -24,7 +24,18 @@ genTests = (type) ->
         assert.deepEqual [{p:['foo'], od:1},{p:['bar'], oi:2}], type.compose [{p:['foo'],od:1}],[{p:['bar'],oi:2}]
       it 'merges od+oi, od+oi -> od+oi', ->
         assert.deepEqual [{p:['foo'], od:1, oi:2}], type.compose [{p:['foo'],od:1,oi:3}],[{p:['foo'],od:3,oi:2}]
+      it 'oi,oin -> oi', ->
+        assert.deepEqual [{p:['foo'], oi:1}], type.compose [{p:['foo'],oi:1}],[{p:['foo'],oin:2}]
+      it 'oin,oin` -> oin', ->
+        assert.deepEqual [{p:['foo'], oin:1}], type.compose [{p:['foo'],oin:1}],[{p:['foo'],oin:2}]
+      it 'od,oin -> od+oi', ->
+        assert.deepEqual [{p:['foo'], od:1, oi:2}], type.compose [{p:['foo'],od:1}],[{p:['foo'],oin:2}]
+      it 'od+oi,oin -> od+oi', ->
+        assert.deepEqual [{p:['foo'], od:1, oi:3}], type.compose [{p:['foo'],od:1,oi:3}],[{p:['foo'],oin:2}]
 
+    describe '#invert()', ->
+      it 'optional insert inverts to delete', ->
+        assert.deepEqual [{p:['foo'], od:1}], type.invert [{p:['foo'], oin:1}]
 
     describe '#transform()', -> it 'returns sane values', ->
       t = (op1, op2) ->
@@ -316,6 +327,7 @@ genTests = (type) ->
       assert.deepEqual {x:'a', y:'b'}, type.apply {x:'a'}, [{p:['y'], oi:'b'}]
       assert.deepEqual {}, type.apply {x:'a'}, [{p:['x'], od:'a'}]
       assert.deepEqual {x:'b'}, type.apply {x:'a'}, [{p:['x'], od:'a', oi:'b'}]
+      assert.deepEqual {x:'a'}, type.apply {x:'a'}, [{p:['x'], oin: 'b'}]
 
     it 'Ops on deleted elements become noops', ->
       assert.deepEqual [], type.transform [{p:[1, 0], si:'hi'}], [{p:[1], od:'x'}], 'left'
@@ -374,6 +386,16 @@ genTests = (type) ->
       assert.deepEqual [], type.transform [{p:['k'], od:'x'}], [{p:['k'], od:'x'}], 'left'
       assert.deepEqual [], type.transform [{p:['k'], od:'x'}], [{p:['k'], od:'x'}], 'right'
 
+    it 'Optional insert vs insert', ->
+      assert.deepEqual [], type.transform [{p:[1], oin:'a'}], [{p:[1], oi:'b'}], 'left'
+      assert.deepEqual [{p:[1], od:'a', oi:'b'}], type.transform [{p:[1], oin:'a'}], [{p:[1], oi:'b'}], 'right'
+
+    it 'Optional vs optional, no one wins', ->
+      assert.deepEqual [], type.transform [{p:[1], oin:'a'}], [{p:[1], oin:'b'}], 'left'
+      assert.deepEqual [], type.transform [{p:[1], oin:'a'}], [{p:[1], oin:'b'}], 'right'
+
+
+
   describe 'randomizer', ->
     it 'passes', ->
       @slow 6000
@@ -383,6 +405,11 @@ genTests = (type) ->
       type._testStringSubtype = true # hack
       randomizer type, 1000
       delete type._testStringSubtype
+
+    it 'passes with `oin` operation', ->
+      type._testOin = true # hack
+      randomizer type, 1000
+      delete type._testOin
 
 describe 'json', ->
   describe 'native type', -> genTests nativetype
