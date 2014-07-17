@@ -8,7 +8,7 @@ clean:
 	rm -rf webclient
 
 test:
-	node_modules/.bin/mocha
+	node_modules/.bin/mocha --compilers coffee:coffee-script/register
 
 webclient/%.uncompressed.js: before.js lib/%.js after.js
 	mkdir -p webclient
