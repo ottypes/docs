@@ -1,16 +1,32 @@
 # Operational transform types, sir?
 
-We have a lovely buffet of operational transform types. Each type has many fine features, including thorough testing, browser support and documentation.
+We have a lovely buffet of operational transform types. Each type has many fine
+features, including thorough testing, browser support and documentation. Each
+type has its own project in this github organization.
 
-These types have been finely aged in [ShareJS](https://github.com/josephg/sharejs)'s type labs. We are quite proud of them.
+These types have been finely aged in
+[ShareJS](https://github.com/josephg/sharejs)'s type labs, and now they're
+ready to enter the world and be used by everyone. We are rather proud of them.
 
-Please port any types you find useful to your favorite languages so we can do operational transform in more places. I have a sister project for C versions [here](https://github.com/share/libot) that I might merge in at some point.
+Each type defines a set of standard methods for programatic use. You should be
+able to define a type using the spec then plug it directly into ShareJS (or
+other compatible collaborative editing systems) and use it immediately. The
+type defines how operations and documents are stored and manipulated, while a
+system like sharejs can decide where the data should be stored on disk, network
+protocols and all that jazz.
 
-[![Build Status](https://secure.travis-ci.org/josephg/ot-types.png)](http://travis-ci.org/josephg/ot-types)
+## Javascript Spec
 
-## Spec
+Each OT type exposes a single object with the following properties. Note that
+only *name*, *create*, *apply* and *transform* are strictly required, though
+most types should also include *url* and *compose*.
 
-Each OT type exposes a single object with the following properties. Note that only *name*, *create*, *apply* and *transform* are strictly required, though most types should also include *url* and *compose*.
+There is a simple example of a working type in [example.js](example.js). For a
+more thorough example, take a look at [the text type](/ottypes/text).
+
+If you're publishing your library in npm (and you should!), the module should
+expose an object with a `.type` property (containing your type). So for
+example, `require('ot-text').type.name` contains the text type's name.
 
 ### Standard properties
 
@@ -41,6 +57,13 @@ Transform property 2 is an additional requirement on your *transform* function. 
 - **tp2**: *(optional)* Boolean property. Make this truthy to declare that the type has tp2 support. Types with TP2 support must define *prune*.
 - **prune(op, otherOp)**: The inverse of transform. Formally, apply(snapshot, op1) == apply(snapshot, prune(transform(op1, op2), op2)). Usually, prune will simply be the inverse of transform and prune(transform(op1, op2), op2) == op1.
 
+### CRDTs
+
+Technically, CRDT types are a subset of OT types. Which is to say, they *are*
+OT types that don't need a transform function. As a result, anything that can
+handle these OT types should also be able to consume CRDTs. But I haven't
+tested it. If anyone wants to work with me to add CRDT support here, [email
+me](mailto:josephg.com).
 
 ---
 
