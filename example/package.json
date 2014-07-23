@@ -1,0 +1,11 @@
+{
+  "name": "ot-example",
+  "version": "1.0.0",
+  "description": "Example of a simple OT type",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Joseph Gentle <me@josephg.com>",
+  "license": "ISC"
+}
