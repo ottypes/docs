@@ -1,5 +1,5 @@
 {
-  "name": "ot-example",
+  "name": "ot-simple",
   "version": "1.0.0",
   "description": "Example of a simple OT type",
   "main": "index.js",
