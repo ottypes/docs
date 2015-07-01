@@ -21,7 +21,7 @@ This repository contained three OT types. They were split to separate repositori
 
 ### [ot-text](https://github.com/ottypes/text)
 
-This is the type you should use for normal plain-text editing. It can tranform operation with complexity N against operation with complexity N in O(N+M) time. This makes it much faster than ot-text-tp2 implementation.
+This is the type you should use for normal plain-text editing. It can tranform operation with complexity N against operation with complexity M in O(N+M) time. This makes it much faster than ot-text-tp2 implementation.
 
 ### [ot-text-tp2](https://github.com/ottypes/text)
 
