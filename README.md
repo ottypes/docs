@@ -29,11 +29,11 @@ This implementation features [Transform Property 2](http://en.wikipedia.org/wiki
 
 ### [ot-json0](https://github.com/ottypes/json0)
 
-This implementaion is capable of transforming not only text but also JSON structures. Unfortunately this implementation uses slow transformation alogirithm that takes O(N*M) time in contrast to O(N+M) time for ot-text type. That's why you shouldn't use this type if you want to transform just plain text.
+This implementation is capable of transforming not only text but also JSON structures. Unfortunately this implementation uses slow transformation alogirithm that takes O(N*M) time in contrast to O(N+M) time for ot-text type. That's why you shouldn't use this type if you want to transform just plain text.
 
 ### [rich-text](https://github.com/ottypes/rich-text)
 
-This implementation work slower than ot-text, but allows for formatting of rich text.
+This is an OT implementation for collaboratively editing rich text documents. It was designed alongside [QuillJS](http://quilljs.com/) for editing those documents.
 
 ## Javascript Spec
 
