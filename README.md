@@ -41,7 +41,7 @@ Each OT type exposes a single object with the following properties. Note that
 only *name*, *create*, *apply* and *transform* are strictly required, though
 most types should also include *url* and *compose*.
 
-There is a simple example of a working type in [example.js](example.js). For a
+There is a simple example of a working type in [example.js](example/simple.js). For a
 more thorough example, take a look at [the text type](/ottypes/text).
 
 If you're publishing your library in npm (and you should!), the module should
