@@ -19,7 +19,7 @@ protocols and all that jazz.
 
 This repository contained three OT types. They were split to separate repositories:
 
-### [ot-text](https://github.com/ottypes/text)
+### [ot-text-unicode](https://github.com/ottypes/text-unicode)
 
 This is the type you should use for normal plain-text editing. It can tranform operation with complexity N against operation with complexity M in O(N+M) time. This makes it much faster than ot-text-tp2 implementation.
 
@@ -27,9 +27,9 @@ This is the type you should use for normal plain-text editing. It can tranform o
 
 This implementation features [Transform Property 2](http://en.wikipedia.org/wiki/Operational_transformation#Convergence_properties) which makes it a good suit for peer-to-peer communication. Unfortunately the extra (unnecessary) complexity kills v8's optimizer and as a result ot-text-tp2 goes about 20x slower than the ot-text type. If you're using client-server library like ShareJS, you don't need TP2 property, so you should use simpler ot-text implementation,
 
-### [ot-json0](https://github.com/ottypes/json0)
+### [ot-json1](https://github.com/ottypes/json1)
 
-This implementation is capable of transforming not only text but also JSON structures. Unfortunately this implementation uses slow transformation algorithm that takes O(N*M) time in contrast to O(N+M) time for ot-text type. That's why you shouldn't use this type if you want to transform just plain text.
+This implementation is capable of transforming not only text but also JSON structures. It supports arbitrary inserts, deletes, and reparenting through the tree of a JSON object.
 
 ### [rich-text](https://github.com/ottypes/rich-text)
 
@@ -60,6 +60,7 @@ Transform must conform to Transform Property 1. That is, apply(apply(snapshot, o
 
 ### Optional properties
 
+- **invertWithCtx(op, doc) -> op'**: *(optional, RECOMMENDED)* Invert the given operation using context from the document to which it can be applied. This method should generally be added to every type as a way to create undo operations. Formally given apply(snapshot, op) is valid, this creates an operation such that apply(apply(snapshot, op), invert(op, snapshot)) == snapshot. If invert(op) exists, invertWithDoc(op, \_) == invert(op). *💣 NOTE*: The document passed to invertWithCtx should be the document state *before* the operation is applied. Not *after* the operation has been applied.
 - **invert(op) -> op'**: *(optional)* Invert the given operation. The original operation must not be edited in the process. If supplied, apply(apply(snapshot, op), invert(op)) == snapshot.
 - **normalize(op) -> op'**: *(optional)* Normalize an operation, converting it to a canonical representation. normalize(normalize(op)) == normalize(op).
 - **transformCursor(cursor, op, isOwnOp) -> cursor'**: *(optional)* transform the specified cursor by the provided operation, so that the cursor moves forward or backward as content is added or removed before (or at) the cursor position. isOwnOp defines how the cursor should be transformed against content inserted *at* the cursor position. If isOwnOp is true, the cursor is moved after the content inserted at the original cursor position. If isOwnOp is false, the cursor remains before the content inserted at the original cursor position.
