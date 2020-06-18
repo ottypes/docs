@@ -1,4 +1,4 @@
-# Operational transform types, sir?
+# Operational transform types, sir & madam?
 
 We have a lovely buffet of operational transform types. Each type has many fine
 features, including thorough testing, browser support and documentation. Each
