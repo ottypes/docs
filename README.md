@@ -1,4 +1,4 @@
-# Operational transform types, sir & madam?
+# Standard operational transform types
 
 We have a lovely buffet of operational transform types. Each type has many fine
 features, including thorough testing, browser support and documentation. Each
@@ -60,7 +60,7 @@ Transform must conform to Transform Property 1. That is, apply(apply(snapshot, o
 
 ### Optional properties
 
-- **invertWithCtx(op, doc) -> op'**: *(optional, RECOMMENDED)* Invert the given operation using context from the document to which it can be applied. This method should generally be added to every type as a way to create undo operations. Formally given apply(snapshot, op) is valid, this creates an operation such that apply(apply(snapshot, op), invert(op, snapshot)) == snapshot. If invert(op) exists, invertWithDoc(op, \_) == invert(op). *💣 NOTE*: The document passed to invertWithCtx should be the document state *before* the operation is applied. Not *after* the operation has been applied.
+- **invertWithDoc(op, doc) -> op'**: *(optional, RECOMMENDED)* Invert the given operation using context from the document to which it can be applied. This method should generally be added to every type as a way to create undo operations. Formally given apply(snapshot, op) is valid, this creates an operation such that apply(apply(snapshot, op), invert(op, snapshot)) == snapshot. If invert(op) exists, invertWithDoc(op, \_) == invert(op). *💣 NOTE*: The document passed to invertWithCtx should be the document state *before* the operation is applied. Not *after* the operation has been applied.
 - **invert(op) -> op'**: *(optional)* Invert the given operation. The original operation must not be edited in the process. If supplied, apply(apply(snapshot, op), invert(op)) == snapshot.
 - **normalize(op) -> op'**: *(optional)* Normalize an operation, converting it to a canonical representation. normalize(normalize(op)) == normalize(op).
 - **transformCursor(cursor, op, isOwnOp) -> cursor'**: *(optional)* transform the specified cursor by the provided operation, so that the cursor moves forward or backward as content is added or removed before (or at) the cursor position. isOwnOp defines how the cursor should be transformed against content inserted *at* the cursor position. If isOwnOp is true, the cursor is moved after the content inserted at the original cursor position. If isOwnOp is false, the cursor remains before the content inserted at the original cursor position.
