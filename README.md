@@ -23,7 +23,7 @@ This repository contained three OT types. They were split to separate repositori
 
 This is the type you should use for normal plain-text editing. It can tranform operation with complexity N against operation with complexity M in O(N+M) time. This makes it much faster than ot-text-tp2 implementation.
 
-### [ot-text-tp2](https://github.com/ottypes/text)
+### [ot-text-tp2](https://github.com/ottypes/text-tp2)
 
 This implementation features [Transform Property 2](http://en.wikipedia.org/wiki/Operational_transformation#Convergence_properties) which makes it a good suit for peer-to-peer communication. Unfortunately the extra (unnecessary) complexity kills v8's optimizer and as a result ot-text-tp2 goes about 20x slower than the ot-text type. If you're using client-server library like ShareJS, you don't need TP2 property, so you should use simpler ot-text implementation,
 
