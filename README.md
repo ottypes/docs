@@ -54,8 +54,16 @@ example, `require('ot-text').type.name` contains the text type's name.
 - **uri**: *(Optional, will be required soon)* A canonical location for this type. The spec for the OT type should be at this address. Remember kids, Tim Berners-Lee says [cool URLs don't change](http://www.w3.org/Provider/Style/URI.html).
 - **create([initialData]) -> snapshot**: A function to create the initial document snapshot. Create may accept initial snapshot data as its only argument. Either the return value must be a valid target for `JSON.stringify` or you must specify *serialize* and *deserialize* functions (described below).
 - **apply(snapshot, op) -> snapshot'**: Apply an operation to a document snapshot. Returns the changed snapshot. For performance, old document must not be used after this function call, so apply may reuse and return the current snapshot object.
-- **transform(op1, op2, side) -> op1'**: Transform op1 by op2. Return the new op1. Side is either `'left'` or `'right'`. It exists to break ties, for example if two operations insert at the same position in a string. Both op1 and op2 must not be modified by transform.
-Transform must conform to Transform Property 1. That is, apply(apply(snapshot, op1), transform(op2, op1, 'left')) == apply(apply(snapshot, op2), transform(op1, op2, 'right')).
+- **transform(op1, op2, side) -> op1'**: Transform op1 by op2. Return the new op1. In other words, make op1 compatible with a document where op2 has already been applied.
+  
+  Side is either `'left'` or `'right'`. It exists to break ties, for example if two operations insert at the same position in a string, or write to the same property in an object. `'left'` means that op1 (the left argument) should take priority in a tie, and vice versa.
+  
+  Both op1 and op2 must not be modified by transform. Transform must conform to Transform Property 1. That is:
+  
+  ```
+  apply(apply(snapshot, op1), transform(op2, op1, 'left')) == apply(apply(snapshot, op2), transform(op1, op2, 'right')).
+  ```
+  
 - **compose(op1, op2) -> op**: *(optional)* Compose op1 and op2 to produce a new operation. The new operation must subsume the behaviour of op1 and op2. Specifically, apply(apply(snapshot, op1), op2) == apply(snapshot, compose(op1, op2)). Note: transforming by a composed operation is *NOT* guaranteed to produce the same result as transforming by each operation in order. This function is optional, but unless you have a good reason to do otherwise, you should provide a compose function for your type.
 
 ### Optional properties
